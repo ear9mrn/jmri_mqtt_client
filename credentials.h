@@ -2,8 +2,8 @@
 #define Credentials_h
 
 //wifi ssid and password.
-#define   DEFAULTSSID              "conspiracy"                  
-#define   DEFAULTPASSWORD     	   "petefish"    
+#define   DEFAULTSSID              "ssid"                  
+#define   DEFAULTPASSWORD     	   "pass"    
 
 
 #endif
