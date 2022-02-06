@@ -1,62 +1,83 @@
 
 #include "jmri_urlUpdate.h"
-#include <ESP8266HTTPClient.h>
-#include <ESP8266httpUpdate.h>
 
+uint8_t nextval = 0;
+        
+void urlupdate(jmriData *jmri_data){
 
-void urlupdate(){
+    if  ( WiFi.status() == WL_CONNECTED ) {
 
-    if ( WiFi.status() == WL_CONNECTED ) {
+        nextval = 0;
+        JMRI_HELPER::logging(1,F("Heap size: %u\n"), ESP.getFreeHeap());
+        
+        BearSSL::WiFiClientSecure wificlientssl;
+        bool mfln = wificlientssl.probeMaxFragmentLength("github.com", 443, 512);  
+        JMRI_HELPER::logging(1,F("MFLN supported: %s\n"), mfln ? "yes" : "no");
 
-          WiFiClient client;
+        if (mfln) {
+              wificlientssl.setBufferSizes(512, 512);
+        } else {
+           JMRI_HELPER::logging(0,F("Unable to update ESP8266 due to lack of MFLN support.\n"));
+           JMRI_HELPER::logging(0,F("Try downloading the latest firmware version from github and updating manually.\n"));
+           JMRI_HELPER::logging(0,F("The latest version can be found here: \"https://github.com/ear9mrn/jmri_mqtt_client/releases\".\n"));
+           jmri_data->urlUpdate = 0.0;
+           return;
+        }
+
+        ESPhttpUpdate.onProgress(update_progress);
+        ESPhttpUpdate.onStart(update_started);
+        ESPhttpUpdate.onError(update_error);
+        ESPhttpUpdate.onEnd(update_finished);
+        
+        wificlientssl.setInsecure();
+        ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        char host[150];
+        sprintf(host, "https://github.com/ear9mrn/jmri_mqtt_client/releases/download/%04.2f/jmri_mqtt_client.ino.nodemcu_%04.2f.bin",jmri_data->urlUpdate,jmri_data->urlUpdate);
+        JMRI_HELPER::logging(1,F("Attempting to download and update ESP2866...\n"));
+        JMRI_HELPER::logging(1,F("Source file URL: %s\n\n"),host);        
+        
+        t_httpUpdate_return ret = ESPhttpUpdate.update(wificlientssl, host );
       
-          // The line below is optional. It can be used to blink the LED on the board during flashing
-          // The LED will be on during download of one buffer of data from the network. The LED will
-          // be off during writing that buffer to flash
-          // On a good connection the LED should flash regularly. On a bad connection the LED will be
-          // on much longer than it will be off. Other pins than LED_BUILTIN may be used. The second
-          // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
-          ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
-      
-          // Add optional callback notifiers
-          ESPhttpUpdate.onStart(update_started);
-          ESPhttpUpdate.onEnd(update_finished);
-          ESPhttpUpdate.onProgress(update_progress);
-          ESPhttpUpdate.onError(update_error);
-      
-          t_httpUpdate_return ret = ESPhttpUpdate.update(client, "http://nevill.uk.net/inotest/WebUpdatermine.ino.nodemcu.bin");
-          // Or:
-          //t_httpUpdate_return ret = ESPhttpUpdate.update(client, "server", 80, "file.bin");
-      
-          switch (ret) {
-            case HTTP_UPDATE_FAILED:
-              Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-              break;
-      
-            case HTTP_UPDATE_NO_UPDATES:
-              Serial.println("HTTP_UPDATE_NO_UPDATES");
-              break;
-      
-            case HTTP_UPDATE_OK:
-              Serial.println("HTTP_UPDATE_OK");
-              break;
-          }
+        switch (ret) {
+          case HTTP_UPDATE_FAILED:
+            JMRI_HELPER::logging(0,F("HTTP_UPDATE_FAILED Error (%d): %s\n"), ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+            break;
+    
+          case HTTP_UPDATE_NO_UPDATES:
+            JMRI_HELPER::logging(2,F("HTTP_UPDATE_NO_UPDATES"));
+            break;
+    
+          case HTTP_UPDATE_OK:
+            JMRI_HELPER::logging(2,F("HTTP_UPDATE_OK"));
+            break;
         }
         
+        JMRI_HELPER::logging(1,F("Heap size: %u\n"), ESP.getFreeHeap());
+    }
+     jmri_data->urlUpdate = 0.0;
 }
 
+// need to fix so this only shows incremenatal progress ~10%
+void update_progress(unsigned int progress, unsigned int total) {
+
+            if ( ((float)progress / (float)total) * 100 > nextval){
+                JMRI_HELPER::logging(1,F("."));
+                nextval+=5;
+            }
+            
+};
+
 void update_started() {
-      Serial.println("CALLBACK:  HTTP update process started");
+      JMRI_HELPER::logging(1,F("HTTP update process started.\n"));
+      //nextval=0;
 }
     
 void update_finished() {
-      Serial.println("CALLBACK:  HTTP update process finished");
+      JMRI_HELPER::logging(1,F("\nHTTP update completed.\n\n"));
+      JMRI_HELPER::logging(2,F("Heap size: %u\n"), ESP.getFreeHeap());
 }
     
-void update_progress(int cur, int total) {
-      Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
-}
     
 void update_error(int err) {
-      Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
+       JMRI_HELPER::logging(1,F("HTTP update fatal error code %d\n"), err);
 }

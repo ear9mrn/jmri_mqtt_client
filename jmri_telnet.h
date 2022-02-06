@@ -1,19 +1,27 @@
 
 #ifndef TELNET_h
 #define TELNET_h
-  
+
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include "newconfig.h"
 #include "config.h"
 
-struct JMRI_TEL {
+class jmri_telnet {
 
-        static JMRI_TEL *jmri_tel;
-        jmriData        *jmri_ptr;
-        static void     tel_init       (jmriData *jmri_data);
+  public:
+  
+        static void     tel_init();
         static void     telPrint(char *text);
         static void     clientConnected();
-        static int      telAddress;
-        static int      pointer();
-         
+        static bool     telnetUp();
+        
+      
+  private:
+
+        static WiFiClient   telnetClient;
+        static WiFiServer   *telnetServer;
+        
 };
 
 #endif

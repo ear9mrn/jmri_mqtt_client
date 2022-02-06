@@ -1,70 +1,57 @@
 
 #include "jmri_telnet.h"
-#include "helper.h"
 
 //this enables you to view MQTT messages (sent and received) over telnet 
 //i.e. without need of serial monitor via usb and remotely
 //linux command line or windows cmd on same network "telnet <esp1266 ip>"
 
-void JMRI_TEL::tel_init(jmriData *jmri_data) {
+WiFiClient   jmri_telnet::telnetClient;
+WiFiServer  *jmri_telnet::telnetServer;
 
-      jmri_tel=(JMRI_TEL *)calloc(1,sizeof(JMRI_TEL));
-      jmri_tel->jmri_ptr = jmri_data;
+void jmri_telnet::tel_init() {
 
-      jmri_data->telnetServer = new WiFiServer(23);
-      jmri_data->telnetServer->begin();
-
-      jmri_data->telnetUp = true;
-      
-//      if (jmri_data->telnetServer->operator()) {
-//          Serial.println(F("Telnet server up...\n"));
-//      }
-           
+      telnetServer = new WiFiServer(23);
+      telnetServer->begin();
+        
 }
 
-
 //print/send message to the telnet client
-void JMRI_TEL::telPrint(char * text) {
+void jmri_telnet::telPrint(char * text) {
 
-  if (!jmri_tel->jmri_ptr->telnetClient)
+  if (!telnetClient)
   {
-      jmri_tel->jmri_ptr->telnetClient = jmri_tel->jmri_ptr->telnetServer->available();
+      telnetClient = telnetServer->available();
       
-      if (jmri_tel->jmri_ptr->telnetClient) {
-          Serial.printf("Telnet client connected...\n");
-          jmri_tel->jmri_ptr->telnetClient.print("JMRI telnet server...\n");
+      if (telnetClient) {
+          Serial.print(F("Telnet client connected...\n"));
+          telnetClient.print("JMRI telnet server...\n");
       }
   }
-  if (jmri_tel->jmri_ptr->telnetClient){
-    jmri_tel->jmri_ptr->telnetClient.print(text);
+  if (telnetClient){
+     telnetClient.print(text);
   } 
 }
 
-void JMRI_TEL::clientConnected() {
+void jmri_telnet::clientConnected() {
 
-    if (jmri_tel->jmri_ptr->telnetServer->hasClient()) {
+    if (telnetServer->hasClient()) {
 
-        if (!jmri_tel->jmri_ptr->telnetClient || !jmri_tel->jmri_ptr->telnetClient.connected()) {
-              if (jmri_tel->jmri_ptr->telnetClient) {
-                  jmri_tel->jmri_ptr->telnetClient.stop();
+        if (!telnetClient || !telnetClient.connected()) {
+              if (telnetClient) {
+                  telnetClient.stop();
                   //JMRI_HELPER::logging(1,"Telnet client disconneted...\n");
-                  Serial.printf("Telnet client disconneted...\n");
+                  Serial.print(F("Telnet client disconneted...\n"));
               }
               
-              jmri_tel->jmri_ptr->telnetClient = jmri_tel->jmri_ptr->telnetServer->available();
-              //JMRI_HELPER::logging(1,"New Telnet client connected...\n");
-              Serial.printf("New Telnet client connected...\n");
-              jmri_tel->jmri_ptr->telnetClient.print("\n───░█ ░█▀▄▀█ ░█▀▀█ ▀█▀\n─▄─░█ ░█░█░█ ░█▄▄▀ ░█─\n░█▄▄█ ░█──░█ ░█─░█ ▄█▄\n\n");
-              jmri_tel->jmri_ptr->telnetClient.print("JMRI MQTT Accessory telnet server...\nWelcome...\n\n");
-              jmri_tel->jmri_ptr->telnetClient.flush();  // clear input buffer, else you get strange characters 
+              telnetClient = telnetServer->available();
+              //JMRI_HELPER::logging(1,F("New Telnet client connected...\n"));
+              Serial.print(F("New Telnet client connected...\n"));
+              telnetClient.print("\n───░█ ░█▀▄▀█ ░█▀▀█ ▀█▀\n─▄─░█ ░█░█░█ ░█▄▄▀ ░█─\n░█▄▄█ ░█──░█ ░█─░█ ▄█▄\n\n");
+              telnetClient.print("JMRI MQTT Accessory telnet server...\nWelcome...\n\n");
+              telnetClient.flush();  // clear input buffer, else you get strange characters 
             }
       }
 }
-
-
-int JMRI_TEL::pointer(){
-      return(telAddress);
+bool jmri_telnet::telnetUp() {
+    return telnetClient;
 }
-
-JMRI_TEL *JMRI_TEL::jmri_tel=NULL;
-int JMRI_TEL::telAddress=0;

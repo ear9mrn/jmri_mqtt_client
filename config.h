@@ -2,16 +2,13 @@
 #define JMRI_CONFIG_h
 
 #include <Adafruit_PWMServoDriver.h>
-#include <ESPAsyncWebServer.h>
-#include <PubSubClient.h>
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
 #include <Servo.h>
 #include <PCF8575.h>
+
 //either edit credientials.h or #define below DEFAULTPASSWORD and DEFAULTSSID.
 #include "credentials.h"                                  
 
-#define   VERSION             "0.1"
+#define   VERSION             0.10
 #define   DEFAULTMQTTSERVER   "192.168.1.45"              //default MQTT broker ip address
 #define   DEFAULTMQTTPORT     1883                        //default MQTT broker port
 #define   DEFAULTMQTTTOPIC    "/trains/track/#"           //default sensor topic
@@ -42,6 +39,7 @@
 #define   FREQUENCY             50
 
 #define   EESTORE_ID "JMRI"               //first 4 charaters of eeprom to determin if store exists
+#define   UNUSED(x) (void)(x)
 
 /* pin mapping ESP8266
  * D0 -> 16 (GPO) No Interrupt (No input)
@@ -76,8 +74,7 @@ struct EEStoreData{
         char    ssid[33];
         char    pass[65];
         uint8_t i2c_addr[DEVICES];   
-        uint8_t loglvl;                     //0=none,1=info,2=verbose;
-        char    version[11];                //This version of sketch.
+        uint8_t loglvl;                   //0=none,1=info,2=verbose;
         
 };
 
@@ -113,35 +110,23 @@ struct binfo {
 
 struct jmriData{ 
                   
-        EEStoreData   		data;                 //main config struct
-        EEStoreDevData    devdata[DEVICES];     //devices config struct
-	      ESP8266WiFiClass 	wifi_client;          //wifi object
-	      AsyncWebServer 		*server;              //webserver object pointer
-        AsyncEventSource 	*events;              //webserver events object pointer
-	      PubSubClient  		client;               //MQTT client object
-        WiFiClient 		    telnetClient;         //telnet client object
-        //WiFiClient        downlClient;          //url download client object
-        WiFiServer 		    *telnetServer;        //server for telnet client
-
+        EEStoreData   		data;                       //main config struct
+        EEStoreDevData    devdata[DEVICES];           //devices config struct
+        binfo             boardinfo[DEVICES];         //array of structs containting all board info
+                        
 	      volatile unsigned long 	previousMillis = 0;   //debounce for interrupt
+        volatile bool     pcfChange = false;          //bool that indicates interrupt occured
+        volatile uint8_t  pcfBChange = 0;             //board that triggered interrupt
+        
         unsigned long 		retainMSGTimer = 0;         //delay for MQTT message retrieve at boot time!
         uint8_t       		nDevices = 0;               //total number of devices including main ESP8266
         uint8_t       		nPCADev  = 0;               //number of PCA devices attached
         uint8_t       		nPCFDev  = 0;               //number of PCF devices attached      
-        binfo             boardinfo[DEVICES];         //array of structs containting all board info
-        volatile bool     pcfChange = false;          //bool that indicates interrupt occured
-        volatile uint8_t  pcfBChange = 0;             //board that triggered interrupt
-                             
+                         
         Servo             servos[PINS];               //array for attached servos to main ESP8266
-        char              wifilist[500];              //wifi scan list during cofigurtion
-        bool              ssidupdate = false;         //tigger for wifi update
-        bool              eepromUpdate = false;       //trigger for eeprom update
-        bool              i2cUpdate = false;          //trigger for i2c update
         volatile bool     bootComplete = false;       //boot complete flag (block input until boot completed)
-        uint8_t           eepromCap = 0;              //number of boards saved to eeprom (max 12)
-        bool              telnetUp = false;           //is telnet server up?
-        bool              shouldReboot = false;
-        bool              urlUpdate = false;
+        float             urlUpdate = 0.0;
+        float             jrmi_mqtt_v_latest = 99.0;  //get the latest version number from github
 
 };
 

@@ -3,10 +3,13 @@
 #define HTMLTEMP_h
 
 #include "config.h"
-#include <LittleFS.h>
+#include "newconfig.h"
+#include "LittleFS.h"
 
-struct JMRI_HTML {
+class JMRI_HTML {
 
+    public:
+    
         static void       html_init();    
   
 };
@@ -62,6 +65,37 @@ window.onload=function(){
 
           document.getElementById("jsonfileinput").value = "";
     });
+
+    document.getElementById("firmwareupdate").addEventListener("change", function() {
+          
+          if (confirm("Existing firmware will be upgraded.\nAre you sure?") == true) {
+
+              var content = "";
+              var fileObj = document.getElementById("firmwareupdate").files[0];
+              var fileSize = fileObj.size
+              let fileread = new FileReader();
+          
+              fileread.onload = function(e) {
+                  var content = e.target.result;  
+                  //console.log(content.substr(2,8));      
+                  var url = "/firmwareUpload"; 
+                  var form = new FormData(); 
+                  form.append("mf", fileObj); 
+                 
+                  xhr = new XMLHttpRequest();
+                  xhr.open("post", url, true);
+                  xhr.setRequestHeader("x-filesize", fileSize);
+                  xhr.send(form);
+
+              };
+     
+              fileread.readAsText(fileObj);
+          }
+
+          document.getElementById("firmwareupdate").value = "";
+    });
+    
+
 }
 
 
@@ -108,6 +142,17 @@ function updatemqtttopic(){
           }
 }
 
+//function to call to update sketch from github with latest version
+function sketchUpdate(){
+
+            if (confirm("Confirm you wish to update to the latest version?") == true) {
+                  var params = "lver=" + document.getElementById('lver').textContent;
+                  //console.log(params);
+                  var xhr = new XMLHttpRequest();              
+                  xhr.open("POST", "/urlfirmwareUpload", true);
+                  xhr.send(params);
+            } 
+}
 //function to call if eeprom reset button pressed
 function eepromReset(){
 
@@ -434,7 +479,7 @@ function getJson(){
         var data;
         var jsonResponse;
     
-        xhr.open("GET", "/json2", true);
+        xhr.open("GET", "/json", true);
         xhr.send();
      
         xhr.addEventListener("readystatechange", function() {
@@ -445,6 +490,18 @@ function getJson(){
                   //console.log(jsonResponse);
                   buildTable(jsonResponse);
                   document.getElementById('ipadd').textContent = jsonResponse.clientip;
+                  document.getElementById('cver').textContent = Number(jsonResponse.cver).toFixed(2);
+                  if (parseFloat(jsonResponse.lver) == 99) {
+                      document.getElementById('lver').title = 'Problem obtaining version details. Check internet connection!';
+                      document.getElementById('lver').textContent = "Unknown!";
+                  } else {                   
+                      document.getElementById('lver').textContent = Number(jsonResponse.lver).toFixed(2);
+                      if ( parseFloat(jsonResponse.lver) > parseFloat(jsonResponse.cver) ){
+                            document.getElementById('href_lver').className = " ";
+                            document.getElementById('href_lver').setAttribute('onclick', 'sketchUpdate()');
+                            document.getElementById('lver').title = 'Download and install latest firmware from github.';  
+                      }
+                  }
                   document.getElementById('macadd').textContent = jsonResponse.clientmac;
                   document.getElementById("defaultOpen").click();
             }  
@@ -488,12 +545,12 @@ function buildTable(data){
         headTable.innerHTML += header; 
         
         header =`<tr id="head"><td>
-            <input type='text' id='mqttip' size='14' value='${data.mqtthost}' title="Enter IP address of MQTT broker.&#13;&#10;Hit update button to save changes.">
-           <input type="button" value="Update" name='mqttip' onclick="updatemqtthost()" title="Save change to MQTT host IP."></td>  
+           <input type='text' id='mqttip' size='14' value='${data.mqtthost}' title="Enter IP address of MQTT broker.&#13;&#10;Hit update button to save changes.">
+           <input class='button_style' type="button" value="Update" name='mqttip' onclick="updatemqtthost()" title="Save change to MQTT host IP."></td>  
            <td><input type='text' id='mqttport' size='7' value='${data.mqttport}' title="Enter port of MQTT broker.&#13;&#10;Hit update button to save changes.">
-           <input type="button" value="Update" name='mqttport' onclick="updatemqttport()" title="Save change to MQTT host port."></td>
+           <input class='button_style' type="button" value="Update" name='mqttport' onclick="updatemqttport()" title="Save change to MQTT host port."></td>
            <td><input type='text' id='mqtttopic'  size='20' value='${data.mqtttopic}' title="Enter MQTT topic.&#13;&#10;JMRI default: /trains/track/# &#13;&#10;Hit update button to save changes.">
-           <input type="button" value="Update" name='mqtttopic' onclick="updatemqtttopic()" title="Save change to MQTT Topic.&#13;&#10;JMRI default: /trains/track/#"></td></tr>`
+           <input class='button_style' type="button" value="Update" name='mqtttopic' onclick="updatemqtttopic()" title="Save change to MQTT Topic.&#13;&#10;JMRI default: /trains/track/#"></td></tr>`
         headTable.innerHTML += header;
       
           for (var j = 0; j < data.number; j++){ 
@@ -622,22 +679,21 @@ const char indexhtml[] PROGMEM = R"rawliteral(
     <a href="https://www.jmri.org/"> 
     <img src="https://www.jmri.org/images/logo-jmri.gif" alt="JMRI"></a>
     <a style="font-size:10px"; href="https://www.jmri.org/copyright.shtml"> Copyright &copy; 1997 - 2021 JMRI Community. JMRI&#174;</a><br>
-    <h2>JRMI Accessory MQTT Client Configuration.</h2>
+    <h2>JMRI Accessory MQTT Client Configuration.</h2>
+    <p>Current Version: <span id=cver></span>&nbsp;&nbsp;&nbsp;Latest Version: <a id="href_lver" href="#" onclick="javascript: void(0);" class="disabled"><span id="lver" title="No update available."></span></a>
     <p>Client IP Address: <span id=ipadd></span>&nbsp;&nbsp;&nbsp;Client MAC Address: <span id=macadd></span></p>
     
-    <input type="button" value="Hardware Reset" name='reset' onclick="eepromReset()" title="Reset configuration to default values. This includes WIFI settings..."></td>
-    <input type="button" value="Board Rescan" name='rescan' onclick="i2cScan()" title="Rescan I2C for attached boards." "></td>
-    <button type="button" onclick="location.href='/json'" title="Create a backup of the current configuration." ">Create backup</button> </td>  
-    <button onclick="document.getElementById('jsonfileinput').click();" title="Restore configuration from file.&#13;&#10;Current configuration will be overwritten.&#13;&#10;Existing WIFI settings will not be effected.">Restore backup</button>
-    <input type="file" accept="application/json" id="jsonfileinput" style="display: none" />  
-    <button type="button" onclick="window.open('/logging.html','_blank')" title="Open message log tab." ">View Messages</button><br>
-    <button type="button" onclick="location.href='/urlfirmwareUpload'" title="Update with the lastest firmware. (requires internet connection)">Update Firmware via url</button>
- 
-     <form method='POST' action='/firmwareUpload' enctype='multipart/form-data'>
-         Firmware:<br>
-         <input type='file' accept='.bin,.bin.gz' name='firmware'>
-         <input type='submit' value='Update Firmware'>
-     </form>
+    <input class='button_style' type="button" value="Hardware Reset" name='reset' onclick="eepromReset()" title="Reset configuration to default values. This includes WIFI settings..."></td>
+    <input class='button_style' type="button" value="Board Rescan" name='rescan' onclick="i2cScan()" title="Rescan I2C for attached boards." ></td>
+    <button class='button_style' type="button" onclick="location.href='/json_exp'" title="Create a backup of the current configuration." >Create backup</button> </td>  
+    
+    <button class='button_style' onclick="document.getElementById('jsonfileinput').click();" title="Restore configuration from file.&#13;&#10;Current configuration will be overwritten.&#13;&#10;Existing WIFI settings will not be effected.">Restore backup</button>
+    <input type="file" accept="application/json" id="jsonfileinput" style="display: none" />
+    
+    <button class='button_style' onclick="document.getElementById('firmwareupdate').click();" title="Upgrade firmware from locally stored file.">Firmware Upgrade</button>
+    <input type="file" accept=".bin" id="firmwareupdate" style="display: none" />  
+    
+    <button class='button_style' type="button" onclick="window.open('/logging.html','_blank')" title="Open message log tab." ">View Messages</button><br>
      
     <table id="headTable" class="table table-striped">
     </table>
@@ -679,6 +735,14 @@ td,th{
       div.a{display: none;}
       div.b{}
       body {font-family: Arial;}
+
+
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none; 
+  color: #000000;
+}
 
 /*input { display: none }*/
 .tabtxt{
@@ -743,6 +807,35 @@ td,th{
       background-color: #ccc;
 }
 
+.button_style {
+      font-family inherit;
+      background-color: #0dcaf0 ; 
+      border: none;
+      color: white;
+      padding: 5px 5px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      //font-size: 16px;
+      border-radius: 6px;
+}
+.button_style:hover {
+       background-color: #0abfe4; 
+}
+
+.br {
+   display: block;
+   margin: 10px 0;
+}
+
+.button_style:active {
+  
+  background: #e5e5e5;
+  -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
+     -moz-box-shadow: inset 0px 0px 5px #c1c1c1;
+          box-shadow: inset 0px 0px 5px #c1c1c1;
+   outline: none;
+}
 .table {
       --bs-table-bg: transparent;
       --bs-table-accent-bg: transparent;
@@ -871,7 +964,7 @@ function radioClick(elem){
       }
       
       const zeroPad = (num, places) => String(num).padStart(places, '0')
-      
+     
       source.addEventListener('updatelog', function(e){ 
           //console.log('updatelog', e.data); 
           
@@ -884,6 +977,13 @@ function radioClick(elem){
           scrollLogToBottom();
   
       }, false);
+
+      var req = new XMLHttpRequest();
+      req.open('GET', document.location, false);
+      req.send(null);
+      var loglvl = req.getResponseHeader ("Log-Level");
+      document.getElementById('log:' + loglvl).checked = true;
+      //console.log(loglvl);
 
 </script>
 </body>

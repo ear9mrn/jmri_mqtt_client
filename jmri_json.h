@@ -1,7 +1,8 @@
 #ifndef JSONLIB2_H
 #define JSONLIB2_H
 
-#include <Arduino.h>
+#include <cstring>
+#include "newconfig.h"
 
       //String jsonRemoveWhiteSpace(const String& json);
       void jsonExtract(char *json, const char *nameArg, char **result);

@@ -1,6 +1,6 @@
 
 #include "jmri_json.h"
-#include <cstring>
+
 
 void jsonIndexList(char * json,  const char* idxname, uint8_t idx, char **result){
 
@@ -104,7 +104,6 @@ void jsonIndexList(char * json,  const char* idxname,   const char* idxname2, ui
       jsonExtract(json, idxname, &result2); 
       jsonIndexList(result2, idxname2, idx,  result);       
       free(result2);          
-
   
 }
 
