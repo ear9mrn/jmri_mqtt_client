@@ -4,13 +4,13 @@ WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
 float  WifiInterface::_jrmi_mqtt_v_latest = 99;
 
 //initiates wifi setup
-void WifiInterface::wifi_setup(const char* ssid, const char * pass) {
+void WifiInterface::wifi_setup() {
 
         WiFi.disconnect();
 
         //try to connect to wifi
         WiFi.mode(WIFI_STA); 
-        WiFi.begin(ssid, pass);   
+        WiFi.begin(jmri_data.data.ssid, jmri_data.data.pass);   
 
         gotIpEventHandler = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP& event) {
             UNUSED(event);
@@ -36,7 +36,7 @@ void WifiInterface::wifi_setup(const char* ssid, const char * pass) {
         //failed. So request a new ssid and password
         if (WiFi.status() != WL_CONNECTED ) {//&& _ssidupdate == false){
             JMRI_HELPER::logging(1,F("\nProblem connecting to wifi with existing credentials.\nAssuming a reset is required...\n"));
-            JMRI_HELPER::logging(1,F("SSID: %s Pass: %s\n\n"), ssid, pass );
+            JMRI_HELPER::logging(1,F("SSID: %s Pass: %s\n\n"), jmri_data.data.ssid, jmri_data.data.pass );
             scan();
             
         } 

@@ -2,35 +2,26 @@
 
 #include "jmri_web.h"
 
-AsyncWebServer JMRI_WEB::server(80);
-AsyncEventSource JMRI_WEB::events("/events");
-uint8_t JMRI_WEB::progress = 0;
-int     JMRI_WEB::fsize = 0;
-bool JMRI_WEB::_shouldReboot = false;
-jmriData *JMRI_WEB::jmri_ptr;
+AsyncWebServer    JMRI_WEB::server(80);
+AsyncEventSource  JMRI_WEB::events("/events");
+uint8_t           JMRI_WEB::progress = 0;
+int               JMRI_WEB::fsize = 0;
+bool              JMRI_WEB::_shouldReboot = false;
 
-void JMRI_WEB::web_init(jmriData *jmri_data){
-
-    //setup pointer
-    //jmri_web=(JMRI_WEB *)calloc(1,sizeof(JMRI_WEB));   
+void JMRI_WEB::web_init(){
+ 
     JMRI_HELPER::logging(1,F("Starting JMRI accessory config web server...\n\n"));
 
-    jmri_ptr = jmri_data;
     server.addHandler(&events);
-      
-    //for local testing...
-    //DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "http://nevill.uk.net");
-    
+         
     //Send web page with input fields to client
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
             
             JMRI_HELPER::logging(2,F("Heap size: %d\n"),ESP.getFreeHeap() );
             
             //redirect if we are not connected to wifi and in AP mode
-            //if (JMRI_WIFI::ssidupdate()){
             if (WiFi.status() != WL_CONNECTED){ 
-            //if (WiFi.softAPIP() == 
-                  //request->redirect("/update");
+
                   request->redirect("/scan");
 
             //serve index.html from SPIFFS(LittleFS)
@@ -87,8 +78,8 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
                   file.close();
                   //AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", logging.html );
                   AsyncWebServerResponse *response = request->beginResponse(LittleFS,"/logging.html", "text/html");
-                  response->addHeader("Log-Level",String(jmri_ptr->data.loglvl));
-                  //jmri_ptr->data.loglvl
+                  response->addHeader("Log-Level",String(jmri_data.data.loglvl));
+                  //jmri_data.data.loglvl
                   request->send(response);
             }
             //request->send(LittleFS, "/logging.html", "text/html");
@@ -147,8 +138,12 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
         AsyncWebParameter *m = request->getParam(1);
 
         char thepin = (char)m->value()[0];
-        JMRI_MQTT::sendMessage(s->value().toInt(), &thepin);
-        
+        //JMRI_MQTT::sendMessage(s->value().toInt(), &thepin);
+        Messg messg;
+        messg.sysname = s->value().toInt();
+        messg.messtate = thepin;
+        jmri_data.messg.push(messg); 
+              
         request->send(200, "text/plain", "Button Clicked");
                 
     });
@@ -163,7 +158,7 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
 
         AsyncWebParameter *b = request->getParam(0);       
         JMRI_HELPER::logging(1,F("urlfirmwareUpload %s\n"),b->value().c_str());      
-        jmri_ptr->urlUpdate = b->value().toFloat();
+        jmri_data.urlUpdate = b->value().toFloat();
                                   
     });
 
@@ -261,57 +256,57 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
                             
                     jsonExtract(buff, "mqtthost", &result);
                     //JMRI_HELPER::logging(2,"result, host: %s\n",result);
-                    sprintf( jmri_ptr->data.mqtt_server_host, result );
+                    sprintf( jmri_data.data.mqtt_server_host, result );
                     
                     jsonExtract(buff, "mqttport", &result);          
                     //Serial.printf("\nresult, port: %d\n", atoi(result));
-                    jmri_ptr->data.mqtt_server_port = atoi(result) ;
+                    jmri_data.data.mqtt_server_port = atoi(result) ;
                                         
                     jsonExtract(buff, "mqtttopic", &result);          
                     //Serial.printf("result, topic: %s\n", result);
-                    sprintf( jmri_ptr->data.mqtt_topic, result );
+                    sprintf( jmri_data.data.mqtt_topic, result );
                                                                                                        
                      for (uint8_t i=0; i<total; i++){   
                               jsonIndexList(buff, "addr", i, &result);          
                               //Serial.printf("\nresult idx: %d, addre: %s\n", i, result); 
-                              jmri_ptr->data.i2c_addr[i] = (uint8_t)atoi(result);
-                              jmri_ptr->devdata[i].i2c_addr = (uint8_t)atoi(result);
+                              jmri_data.data.i2c_addr[i] = (uint8_t)atoi(result);
+                              jmri_data.devdata[i].i2c_addr = (uint8_t)atoi(result);
                               
                               jsonIndexList(buff, "bdesc", i, &result); 
-                              sprintf(jmri_ptr->devdata[i].bdesc, result);
+                              sprintf(jmri_data.devdata[i].bdesc, result);
                                                                                                                            
                         for (uint8_t j=0; j<I2C_PINS; j++){ 
                                 jsonIndexList(buff, "names", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, name: %d\n",i ,j, atoi(result)); 
-                                jmri_ptr->devdata[i].i2c_names[j] = (ushort)atoi(result);
+                                jmri_data.devdata[i].i2c_names[j] = (ushort)atoi(result);
 
                                 jsonIndexList(buff, "mode", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, mode: %c\n",i ,j, result[0]); 
-                                jmri_ptr->devdata[i].i2c_mode[j] = result[0];
+                                jmri_data.devdata[i].i2c_mode[j] = result[0];
 
                                 jsonIndexList(buff, "state", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, state: %c\n",i ,j, result[0]); 
-                                jmri_ptr->devdata[i].i2c_state[j] = result[0];
+                                jmri_data.devdata[i].i2c_state[j] = result[0];
 
                                 jsonIndexList(buff, "pwm", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, pwm: %s\n",i ,j, result); 
                                 if (strcmp(result,"true")==0) {
-                                  jmri_ptr->devdata[i].i2c_pwm[j] = true;
+                                  jmri_data.devdata[i].i2c_pwm[j] = true;
                                 } else {
-                                  jmri_ptr->devdata[i].i2c_pwm[j] = false;
+                                  jmri_data.devdata[i].i2c_pwm[j] = false;
                                 }
                                 
                                 jsonIndexList(buff, "lang", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, lang: %s\n",i ,j, result); 
-                                jmri_ptr->devdata[i].lang[j] = atoi(result);
+                                jmri_data.devdata[i].lang[j] = atoi(result);
 
                                 jsonIndexList(buff, "hang", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, hang: %s\n",i ,j, result); 
-                                jmri_ptr->devdata[i].hang[j] = atoi(result);
+                                jmri_data.devdata[i].hang[j] = atoi(result);
 
                                 jsonIndexList(buff, "desc", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, hang: %s\n",i ,j, result); 
-                                sprintf( jmri_ptr->devdata[i].desc[j], result );                              
+                                sprintf( jmri_data.devdata[i].desc[j], result );                              
                                 
                         }
                     }
@@ -357,9 +352,9 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
     server.on("/changeLogradio", HTTP_POST, [] (AsyncWebServerRequest *request){
 
         AsyncWebParameter *rval = request->getParam(0);
-        jmri_ptr->data.loglvl = (uint8_t)rval->value().toInt();
+        jmri_data.data.loglvl = (uint8_t)rval->value().toInt();
         JMRI_STORE::saveConfig();
-        JMRI_HELPER::logging(1,F("Logging level set to: %d\n"),jmri_ptr->data.loglvl);                            
+        JMRI_HELPER::logging(1,F("Logging level set to: %d\n"),jmri_data.data.loglvl);                            
         request->send(200, "text/plain", "Radio Button Changed");
 
     });
@@ -406,7 +401,7 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
        
         AsyncWebParameter *b = request->getParam(0);
         
-        if (  b->value() == jmri_ptr->data.mqtt_server_host ){   
+        if (  b->value() == jmri_data.data.mqtt_server_host ){   
           //JMRI_HELPER::logging(1,"New MQTT host IP is the same as the old!");
         } else {
           //JMRI_HELPER::logging(1,"New MQTT host IP updated...");
@@ -423,7 +418,7 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
        
         AsyncWebParameter *b = request->getParam(0);
         
-        if (  b->value() == jmri_ptr->data.mqtt_topic ){   
+        if (  b->value() == jmri_data.data.mqtt_topic ){   
           JMRI_HELPER::logging(1,F("New topic same as old!"));
         } else {
           JMRI_HELPER::logging(1,F("New topic different!"));
@@ -441,7 +436,7 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
         AsyncWebParameter *b = request->getParam(0);
         ushort newPort = (ushort)b->value().toInt();
         
-        if (  newPort == jmri_ptr->data.mqtt_server_port ){   
+        if (  newPort == jmri_data.data.mqtt_server_port ){   
           JMRI_HELPER::logging(1,F("New port same as old!"));
         } else {
           JMRI_HELPER::logging(1,F("New port different!"));
@@ -464,8 +459,8 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
         uint8_t thepin = (uint8_t)p->value().toInt();
         ushort newName = (ushort)v->value().toInt();
         
-        if (jmri_ptr->devdata[board].i2c_names[thepin] != newName){       
-            jmri_ptr->devdata[board].i2c_names[thepin] = newName;   
+        if (jmri_data.devdata[board].i2c_names[thepin] != newName){       
+            jmri_data.devdata[board].i2c_names[thepin] = newName;   
             JMRI_STORE::saveBoard(&board); 
         }
         
@@ -484,7 +479,7 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
         uint8_t board  = (uint8_t)b->value().toInt(); 
         uint8_t thepin = (uint8_t)p->value().toInt();
         
-        sprintf(jmri_ptr->devdata[board].desc[thepin],"%.10s",v->value().c_str());
+        sprintf(jmri_data.devdata[board].desc[thepin],"%.10s",v->value().c_str());
         JMRI_STORE::saveBoard(&board);
         
         JMRI_HELPER::logging(1,F("Updated board: %d, pin %d with description: %s\n"),board, thepin, v->value().c_str());                     
@@ -500,7 +495,7 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
         
         uint8_t board  = (uint8_t)b->value().toInt(); 
         
-        sprintf( jmri_ptr->devdata[board].bdesc, d->value().c_str() );
+        sprintf( jmri_data.devdata[board].bdesc, d->value().c_str() );
         JMRI_STORE::saveBoard(&board);
         
         JMRI_HELPER::logging(1,F("Updated board %d: name: %s,\n"),board, d->value().c_str());                     
@@ -521,14 +516,14 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
         uint8_t newAngle = (uint8_t)v->value().toInt();
         
         if ( hla->value() == "la"  ){
-          jmri_ptr->devdata[board].lang[thepin] = newAngle;
-          if (jmri_ptr->devdata[board].i2c_state[thepin] == 'C' && board == 0){
-              jmri_ptr->servos[thepin].write(newAngle);
+          jmri_data.devdata[board].lang[thepin] = newAngle;
+          if (jmri_data.devdata[board].i2c_state[thepin] == 'C' && board == 0){
+              jmri_data.servos[thepin].write(newAngle);
           }
         } else {
-          jmri_ptr->devdata[board].hang[thepin] = newAngle;
-          if (jmri_ptr->devdata[board].i2c_state[thepin] == 'T' && board == 0){
-              jmri_ptr->servos[thepin].write(newAngle);
+          jmri_data.devdata[board].hang[thepin] = newAngle;
+          if (jmri_data.devdata[board].i2c_state[thepin] == 'T' && board == 0){
+              jmri_data.servos[thepin].write(newAngle);
           }
         }
 
@@ -590,8 +585,8 @@ void JMRI_WEB::web_init(jmriData *jmri_data){
       
                   //JMRI_WIFI::set_ssidupdate(false);
                   
-                  sprintf(jmri_ptr->data.ssid, qssid);
-                  sprintf(jmri_ptr->data.pass, qpass);
+                  sprintf(jmri_data.data.ssid, qssid);
+                  sprintf(jmri_data.data.pass, qpass);
                   JMRI_STORE::saveConfig();
                  
                   sprintf(content, "{\"Success\":\"saved to eeprom... reset to boot into new wifi\"}");
@@ -620,123 +615,123 @@ void JMRI_WEB::makejson(AsyncResponseStream *response) {
             
             response->printf("{\"mqtthost\":\"%s\",\"mqttport\":%d,\"mqtttopic\":\"%s\",\"clientip\":\"%s\",\"clientmac\":\"%s\","
                               "\"number\":%d,\"nPCFDev\":%d,\"cver\":%04.2f,\"lver\":%04.2f,",
-                              jmri_ptr->data.mqtt_server_host, jmri_ptr->data.mqtt_server_port, jmri_ptr->data.mqtt_topic, 
-                              WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(),jmri_ptr->nDevices, 
-                              jmri_ptr->nPCFDev, VERSION, jmri_ptr->jrmi_mqtt_v_latest);
+                              jmri_data.data.mqtt_server_host, jmri_data.data.mqtt_server_port, jmri_data.data.mqtt_topic, 
+                              WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(),jmri_data.nDevices, 
+                              jmri_data.nPCFDev, VERSION, jmri_data.jrmi_mqtt_v_latest);
 
             response->printf("\"addr\":[");
 
-            for (b = 0; b<jmri_ptr->nDevices-1; b++){
-                  response->printf("%d,",(int)jmri_ptr->devdata[b].i2c_addr);
+            for (b = 0; b<jmri_data.nDevices-1; b++){
+                  response->printf("%d,",(int)jmri_data.devdata[b].i2c_addr);
             }
-            response->printf("%d]",jmri_ptr->devdata[jmri_ptr->nDevices-1].i2c_addr);
+            response->printf("%d]",jmri_data.devdata[jmri_data.nDevices-1].i2c_addr);
 
             response->printf(",\"type\":[");
-            for (b = 0; b<jmri_ptr->nDevices-1; b++){
-                  response->printf("%d,",jmri_ptr->boardinfo[b].i2ctype);
+            for (b = 0; b<jmri_data.nDevices-1; b++){
+                  response->printf("%d,",jmri_data.boardinfo[b].i2ctype);
             }
-            response->printf("%d]",jmri_ptr->boardinfo[jmri_ptr->nDevices-1].i2ctype);
+            response->printf("%d]",jmri_data.boardinfo[jmri_data.nDevices-1].i2ctype);
             
             response->printf(",\"bdesc\":[");
-            for (b = 0; b<jmri_ptr->nDevices-1; b++){
-                  response->printf("\"%s\",",jmri_ptr->devdata[b].bdesc);
+            for (b = 0; b<jmri_data.nDevices-1; b++){
+                  response->printf("\"%s\",",jmri_data.devdata[b].bdesc);
             }
-            response->printf("\"%s\"]",jmri_ptr->devdata[jmri_ptr->nDevices-1].bdesc);            
+            response->printf("\"%s\"]",jmri_data.devdata[jmri_data.nDevices-1].bdesc);            
             
             response->printf(",\"names\":{");
-            for (b = 0; b<jmri_ptr->nDevices; b++){
+            for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("%d,",jmri_ptr->devdata[b].i2c_names[p]);
+                  response->printf("%d,",jmri_data.devdata[b].i2c_names[p]);
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("%d],",jmri_ptr->devdata[b].i2c_names[I2C_PINS-1]);
+                if (b<jmri_data.nDevices-1){
+                  response->printf("%d],",jmri_data.devdata[b].i2c_names[I2C_PINS-1]);
                 } else {
-                  response->printf("%d]}",jmri_ptr->devdata[b].i2c_names[I2C_PINS-1]);
+                  response->printf("%d]}",jmri_data.devdata[b].i2c_names[I2C_PINS-1]);
                 }
              }  
              
             response->printf(",\"mode\":{");
 
-            for (b = 0; b<jmri_ptr->nDevices; b++){
+            for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("\"%c\",",jmri_ptr->devdata[b].i2c_mode[p]);
+                  response->printf("\"%c\",",jmri_data.devdata[b].i2c_mode[p]);
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("\"%c\"],",jmri_ptr->devdata[b].i2c_mode[I2C_PINS-1]);
+                if (b<jmri_data.nDevices-1){
+                  response->printf("\"%c\"],",jmri_data.devdata[b].i2c_mode[I2C_PINS-1]);
                 } else {
-                  response->printf("\"%c\"]}",jmri_ptr->devdata[b].i2c_mode[I2C_PINS-1]);
+                  response->printf("\"%c\"]}",jmri_data.devdata[b].i2c_mode[I2C_PINS-1]);
                 }
             }
             
             response->printf(",\"state\":{");
 
-            for (b = 0; b<jmri_ptr->nDevices; b++){
+            for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("\"%c\",",jmri_ptr->devdata[b].i2c_state[p]);
+                  response->printf("\"%c\",",jmri_data.devdata[b].i2c_state[p]);
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("\"%c\"],",jmri_ptr->devdata[b].i2c_state[I2C_PINS-1]);
+                if (b<jmri_data.nDevices-1){
+                  response->printf("\"%c\"],",jmri_data.devdata[b].i2c_state[I2C_PINS-1]);
                 } else {
-                  response->printf("\"%c\"]}",jmri_ptr->devdata[b].i2c_state[I2C_PINS-1]);
+                  response->printf("\"%c\"]}",jmri_data.devdata[b].i2c_state[I2C_PINS-1]);
                 }
             } 
 
             response->printf(",\"pwm\":{");
 
-            for (b = 0; b<jmri_ptr->nDevices; b++){
+            for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("%s,", jmri_ptr->devdata[b].i2c_pwm[p] ? "true" : "false");
+                  response->printf("%s,", jmri_data.devdata[b].i2c_pwm[p] ? "true" : "false");
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("%s],",jmri_ptr->devdata[b].i2c_pwm[I2C_PINS-1] ? "true" : "false");
+                if (b<jmri_data.nDevices-1){
+                  response->printf("%s],",jmri_data.devdata[b].i2c_pwm[I2C_PINS-1] ? "true" : "false");
                 } else {
-                  response->printf("%s",jmri_ptr->devdata[b].i2c_pwm[I2C_PINS-1] ? "true" : "false");
+                  response->printf("%s",jmri_data.devdata[b].i2c_pwm[I2C_PINS-1] ? "true" : "false");
                 }
             }
 
             response->printf("]},\"lang\":{");
 
-             for (b = 0; b<jmri_ptr->nDevices; b++){
+             for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("%d,", jmri_ptr->devdata[b].lang[p]);
+                  response->printf("%d,", jmri_data.devdata[b].lang[p]);
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("%d],",jmri_ptr->devdata[b].lang[I2C_PINS-1]);
+                if (b<jmri_data.nDevices-1){
+                  response->printf("%d],",jmri_data.devdata[b].lang[I2C_PINS-1]);
                 } else {
-                  response->printf("%d]}",jmri_ptr->devdata[b].lang[I2C_PINS-1]);
+                  response->printf("%d]}",jmri_data.devdata[b].lang[I2C_PINS-1]);
                 }
             }
 
             response->printf(",\"hang\":{");
 
-            for (b = 0; b<jmri_ptr->nDevices; b++){
+            for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("%d,",jmri_ptr->devdata[b].hang[p]);
+                  response->printf("%d,",jmri_data.devdata[b].hang[p]);
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("%d],",jmri_ptr->devdata[b].hang[I2C_PINS-1]);
+                if (b<jmri_data.nDevices-1){
+                  response->printf("%d],",jmri_data.devdata[b].hang[I2C_PINS-1]);
                 } else {
-                  response->printf("%d]}",jmri_ptr->devdata[b].hang[I2C_PINS-1]);
+                  response->printf("%d]}",jmri_data.devdata[b].hang[I2C_PINS-1]);
                 }
             }
 
             response->printf(",\"desc\":{");
 
-            for (b = 0; b<jmri_ptr->nDevices; b++){
+            for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("\"%s\",", jmri_ptr->devdata[b].desc[p]);
+                  response->printf("\"%s\",", jmri_data.devdata[b].desc[p]);
                 }
-                if (b<jmri_ptr->nDevices-1){
-                  response->printf("\"%s\"],",jmri_ptr->devdata[b].desc[I2C_PINS-1]);
+                if (b<jmri_data.nDevices-1){
+                  response->printf("\"%s\"],",jmri_data.devdata[b].desc[I2C_PINS-1]);
                 } else {
-                  response->printf("\"%s\"]}",jmri_ptr->devdata[b].desc[I2C_PINS-1]);
+                  response->printf("\"%s\"]}",jmri_data.devdata[b].desc[I2C_PINS-1]);
                 }
             }
 
@@ -761,29 +756,29 @@ void JMRI_WEB::send(char* buf, const char* target, unsigned long the_time ){
 //helper for updating the mqtt host
 void JMRI_WEB::update_mqtt_host(char* mqtt_host){
         
-        sprintf(jmri_ptr->data.mqtt_server_host, mqtt_host);  
+        sprintf(jmri_data.data.mqtt_server_host, mqtt_host);  
         JMRI_STORE::saveConfig();    
 
         JMRI_MQTT::disconnect_mqtt();
-        JMRI_MQTT::hostIPupdate(mqtt_host, jmri_ptr->data.mqtt_server_port);
+        JMRI_MQTT::hostIPupdate(mqtt_host, jmri_data.data.mqtt_server_port);
 
 }
 
 //helper for updating the mqtt port
 void JMRI_WEB::update_mqtt_port(ushort mqtt_port){
         
-        jmri_ptr->data.mqtt_server_port = mqtt_port;
+        jmri_data.data.mqtt_server_port = mqtt_port;
         JMRI_STORE::saveConfig();
 
         JMRI_MQTT::disconnect_mqtt();
-        JMRI_MQTT::hostIPupdate(jmri_ptr->data.mqtt_server_host, mqtt_port);
+        JMRI_MQTT::hostIPupdate(jmri_data.data.mqtt_server_host, mqtt_port);
   
 }
 
 //helper for updating the mqtt topic
 void JMRI_WEB::update_mqtt_topic(char* mqtt_topic){
 
-        sprintf(jmri_ptr->data.mqtt_topic, mqtt_topic);
+        sprintf(jmri_data.data.mqtt_topic, mqtt_topic);
         JMRI_STORE::saveConfig();
 
         JMRI_MQTT::disconnect_mqtt();
@@ -791,20 +786,6 @@ void JMRI_WEB::update_mqtt_topic(char* mqtt_topic){
   
 }
 
-//Instructions to intial wifi setup and initiates AP mode 
-//void JMRI_WEB::startAPWeb(){
-//
-//      JMRI_HELPER::logging(0,F("\nLocal access point running...\n"));
-//      //Serial.println("Connect to AP: JMRI-ACC-" + WiFi.macAddress().c_str());
-//      JMRI_HELPER::logging(0,F("Connect to AP: JMRI-ACC-%s\n"), WiFi.macAddress().c_str() );
-//      JMRI_HELPER::logging(0,F("Then navigate to this IP: %s, using a browser.\n"), WiFi.softAPIP().toString().c_str());
-//}
 bool JMRI_WEB::shouldReboot(){
   return _shouldReboot;
 }
-//int JMRI_WEB::pointer(){
-//  return(webAddress);
-//}
-//
-//JMRI_WEB *JMRI_WEB::jmri_web=NULL;
-//int JMRI_WEB::webAddress=0;

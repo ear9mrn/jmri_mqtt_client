@@ -4,7 +4,7 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include "newconfig.h"
+#include "headers.h"
 #include "config.h"
 
 class jmri_telnet {
@@ -15,8 +15,7 @@ class jmri_telnet {
         static void     telPrint(char *text);
         static void     clientConnected();
         static bool     telnetUp();
-        
-      
+            
   private:
 
         static WiFiClient   telnetClient;

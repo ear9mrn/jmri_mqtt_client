@@ -7,8 +7,9 @@
 
 //either edit credientials.h or #define below DEFAULTPASSWORD and DEFAULTSSID.
 #include "credentials.h"                                  
+#include "jmri_queue.h"   
 
-#define   VERSION             0.10
+#define   VERSION             0.30
 #define   DEFAULTMQTTSERVER   "192.168.1.45"              //default MQTT broker ip address
 #define   DEFAULTMQTTPORT     1883                        //default MQTT broker port
 #define   DEFAULTMQTTTOPIC    "/trains/track/#"           //default sensor topic
@@ -106,8 +107,23 @@ struct binfo {
         Adafruit_PWMServoDriver pwm;          //PCA9685 pwm object for this board if appropriate
         PCF8575                 PCF;          //PCF8575 object for this board if appropriate
         
-} ;    
+};    
 
+struct Event { 
+        char a[300]; 
+        char b[20]; 
+};
+
+struct Inter {     
+        uint8_t a; 
+        uint8_t b;
+        char    c; 
+};
+struct Messg {
+        ushort sysname; 
+        char messtate;
+};
+        
 struct jmriData{ 
                   
         EEStoreData   		data;                       //main config struct
@@ -115,9 +131,7 @@ struct jmriData{
         binfo             boardinfo[DEVICES];         //array of structs containting all board info
                         
 	      volatile unsigned long 	previousMillis = 0;   //debounce for interrupt
-        volatile bool     pcfChange = false;          //bool that indicates interrupt occured
-        volatile uint8_t  pcfBChange = 0;             //board that triggered interrupt
-        
+
         unsigned long 		retainMSGTimer = 0;         //delay for MQTT message retrieve at boot time!
         uint8_t       		nDevices = 0;               //total number of devices including main ESP8266
         uint8_t       		nPCADev  = 0;               //number of PCA devices attached
@@ -127,8 +141,12 @@ struct jmriData{
         volatile bool     bootComplete = false;       //boot complete flag (block input until boot completed)
         float             urlUpdate = 0.0;
         float             jrmi_mqtt_v_latest = 99.0;  //get the latest version number from github
+        Queue<Event>      event;
+        Queue<Inter>      inter;
+        Queue<uint8_t>    pcfchange;
+        Queue<Messg>      messg;
 
 };
 
-
+            
 #endif

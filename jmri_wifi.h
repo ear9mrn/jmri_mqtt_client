@@ -6,15 +6,14 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #include "config.h"
-#include "newconfig.h"
+#include "headers.h"
 
-
+extern jmriData jmri_data;
 
 class WifiInterface{
   public:
  
-          static void   wifi_setup (    const char *wifiESSID,
-                                     const char *wifiPassword);                         
+          static void   wifi_setup ();                         
           static float  getLatestVer();
   private:
 

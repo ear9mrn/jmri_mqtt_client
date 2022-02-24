@@ -3,7 +3,7 @@
 
 uint8_t nextval = 0;
         
-void urlupdate(jmriData *jmri_data){
+void urlupdate(){
 
     if  ( WiFi.status() == WL_CONNECTED ) {
 
@@ -20,7 +20,7 @@ void urlupdate(jmriData *jmri_data){
            JMRI_HELPER::logging(0,F("Unable to update ESP8266 due to lack of MFLN support.\n"));
            JMRI_HELPER::logging(0,F("Try downloading the latest firmware version from github and updating manually.\n"));
            JMRI_HELPER::logging(0,F("The latest version can be found here: \"https://github.com/ear9mrn/jmri_mqtt_client/releases\".\n"));
-           jmri_data->urlUpdate = 0.0;
+           jmri_data.urlUpdate = 0.0;
            return;
         }
 
@@ -32,7 +32,7 @@ void urlupdate(jmriData *jmri_data){
         wificlientssl.setInsecure();
         ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
         char host[150];
-        sprintf(host, "https://github.com/ear9mrn/jmri_mqtt_client/releases/download/%04.2f/jmri_mqtt_client.ino.nodemcu_%04.2f.bin",jmri_data->urlUpdate,jmri_data->urlUpdate);
+        sprintf(host, "https://github.com/ear9mrn/jmri_mqtt_client/releases/download/%04.2f/jmri_mqtt_client.ino.nodemcu_%04.2f.bin",jmri_data.urlUpdate,jmri_data.urlUpdate);
         JMRI_HELPER::logging(1,F("Attempting to download and update ESP2866...\n"));
         JMRI_HELPER::logging(1,F("Source file URL: %s\n\n"),host);        
         
@@ -54,7 +54,7 @@ void urlupdate(jmriData *jmri_data){
         
         JMRI_HELPER::logging(1,F("Heap size: %u\n"), ESP.getFreeHeap());
     }
-     jmri_data->urlUpdate = 0.0;
+     jmri_data.urlUpdate = 0.0;
 }
 
 // need to fix so this only shows incremenatal progress ~10%
@@ -69,7 +69,6 @@ void update_progress(unsigned int progress, unsigned int total) {
 
 void update_started() {
       JMRI_HELPER::logging(1,F("HTTP update process started.\n"));
-      //nextval=0;
 }
     
 void update_finished() {

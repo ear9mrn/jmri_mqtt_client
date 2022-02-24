@@ -3,16 +3,18 @@
 #define JMRI_I2C_h
 
 #include "config.h"
-#include "newconfig.h"
+#include "headers.h"
 #include  <EEPROM.h>
+
+extern jmriData jmri_data;
 
 class JMRI_I2C {
 
     public:
     
-          static void     i2c_init(jmriData *jmri_data);
+          static void     i2c_init();
           static int      pulseWidth(uint8_t angle);
-          static void     PCF_Change(jmriData *jmri_data);
+          static void     PCF_Change(uint8_t pcf_board);
           static bool     i2cUpdate();
           static void     set_i2cUpdate(bool state);
   

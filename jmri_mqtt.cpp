@@ -5,18 +5,18 @@ WiFiClient JMRI_MQTT::mqtt_wifi_client;
 PubSubClient JMRI_MQTT::mqttclient(JMRI_MQTT::mqtt_wifi_client);
 
 //initiate MQTT client. Connect and subscribe
-void JMRI_MQTT::mqtt_init(const char * server_host, ushort server_port, const char * topic ){
+void JMRI_MQTT::mqtt_init(){
 
   
         if (WiFi.status() != WL_CONNECTED ){
             return;
         }
 
-        JMRI_HELPER::logging(1,F("MQTT broker IP address: %s\n"), server_host );  
-        JMRI_HELPER::logging(1,F("MQTT broker port: %d\n\n"),     server_port );
+        JMRI_HELPER::logging(1,F("MQTT broker IP address: %s\n"), jmri_data.data.mqtt_server_host );  
+        JMRI_HELPER::logging(1,F("MQTT broker port: %d\n\n"),     jmri_data.data.mqtt_server_port );
 
         //connect and set callback
-        mqttclient.setServer(server_host, (int)server_port);
+        mqttclient.setServer(jmri_data.data.mqtt_server_host, (int)jmri_data.data.mqtt_server_port);
         mqttclient.connect("ESPClient");
         //jmri_data->retainMSGTimer = millis();
         mqttclient.setCallback(JMRI_MQTT::callback);
@@ -24,12 +24,12 @@ void JMRI_MQTT::mqtt_init(const char * server_host, ushort server_port, const ch
         //subscribe to a topic
         // default: /trains/track/#
         if (mqttclient.state() == 0 ) {
-              mqttclient.subscribe( topic);
-              JMRI_HELPER::logging(1,F("Subscribed to: %s\n"), topic);
+              mqttclient.subscribe( jmri_data.data.mqtt_topic);
+              JMRI_HELPER::logging(1,F("Subscribed to: %s\n"), jmri_data.data.mqtt_topic);
         } else {
                
               JMRI_HELPER::logging(1,F("Attempting connection to MQTT broker: %s on port: %d...\nFAILED...\n"), 
-                                      server_host, server_port);
+                                      jmri_data.data.mqtt_server_host, jmri_data.data.mqtt_server_port);
               delay(5000);
         }
            
@@ -49,7 +49,7 @@ void JMRI_MQTT::disconnect_mqtt(){
 void JMRI_MQTT::callback(char* topic, byte* message, unsigned int length) {
 
           //work around to ignore retained messaged when first connecting to broker!
-          //if (millis() - jmri_mqtt->jmri_ptr->retainMSGTimer < 2000){
+          //if (millis() - jmri_data.retainMSGTimer < 2000){
           //  return;
           //}
 
@@ -122,51 +122,111 @@ bool  JMRI_MQTT::connected(){
 }
 
 //create a message to send to broker/JMRI
-void  JMRI_MQTT::sendMessage(ushort sysname, char* messtate){
-
-          if ( mqttclient.state() != 0 ) {
+void JMRI_MQTT::sendMessage(Messg messg){
+  
+        if ( mqttclient.state() != 0 ) {
              JMRI_HELPER::logging(0,F("Problem trying to send MQTT message!\n"));
              return;
           }
             
-          if (sysname == 0){
+          if (messg.messtate == 0){
             return;
           }
           
           char topic[30];
           char report[10];
-        
-          if (*messtate == 'T' || *messtate == 'C'){
+
+          switch (messg.messtate)
+          {
             
-              sprintf(topic,"/trains/track/turnout/%d", sysname);
+          case 'T':
+                    
+              sprintf(topic,"/trains/track/turnout/%d", messg.sysname);
               sprintf(report,"THROWN");
-              
-              if (*messtate == 'C'){
-                  sprintf(report,"CLOSED");
-              }
-              
-          } else if (*messtate == 'N' || *messtate == 'F'){
+              break;
 
-              sprintf(topic,"/trains/track/light/%d", sysname);
+          case 'C':
+          
+              sprintf(topic,"/trains/track/turnout/%d", messg.sysname);
+              sprintf(report,"CLOSED");
+              break;
+                       
+          case 'N': 
+
+              sprintf(topic,"/trains/track/light/%d", messg.sysname);
               sprintf(report,"ON");
-              
-              if (*messtate == 'F'){
-                  sprintf(report,"OFF");
-              }
-              
-          } else if (*messtate == 'A' || *messtate == 'I'){
-             
-              sprintf(topic,"/trains/track/sensor/%d", sysname);
-              sprintf(report,"ACTIVE");
-              
-              if (*messtate == 'I'){
-                  sprintf(report,"INACTIVE");
-              }
-              
-          }
+              break;
 
+          case 'F':
+
+              sprintf(topic,"/trains/track/light/%d", messg.sysname);
+              sprintf(report,"OFF");
+              break;
+              
+          case 'A': 
+             
+              sprintf(topic,"/trains/track/sensor/%d", messg.sysname);
+              sprintf(report,"ACTIVE");
+              break;
+              
+          case 'I':
+              sprintf(topic,"/trains/track/sensor/%d", messg.sysname);
+              sprintf(report,"INACTIVE");
+              break;
+
+          default:
+              return;
+         }
+          
           mqttclient.publish(topic,report);
           JMRI_HELPER::logging(1,F("Message sent on topic: %s. Message: %s\n"), topic, report);
-          //JMRI_HELPER::sendConsole(mess);
                      
-}
+}  
+//void  JMRI_MQTT::sendMessage(ushort sysname, char* messtate){
+//
+//          if ( mqttclient.state() != 0 ) {
+//             JMRI_HELPER::logging(0,F("Problem trying to send MQTT message!\n"));
+//             return;
+//          }
+//            
+//          if (sysname == 0){
+//            return;
+//          }
+//          
+//          char topic[30];
+//          char report[10];
+//        
+//          if (*messtate == 'T' || *messtate == 'C'){
+//            
+//              sprintf(topic,"/trains/track/turnout/%d", sysname);
+//              sprintf(report,"THROWN");
+//              
+//              if (*messtate == 'C'){
+//                  sprintf(report,"CLOSED");
+//              }
+//              
+//          } else if (*messtate == 'N' || *messtate == 'F'){
+//
+//              sprintf(topic,"/trains/track/light/%d", sysname);
+//              sprintf(report,"ON");
+//              
+//              if (*messtate == 'F'){
+//                  sprintf(report,"OFF");
+//              }
+//              
+//          } else if (*messtate == 'A' || *messtate == 'I'){
+//             
+//              sprintf(topic,"/trains/track/sensor/%d", sysname);
+//              sprintf(report,"ACTIVE");
+//              
+//              if (*messtate == 'I'){
+//                  sprintf(report,"INACTIVE");
+//              }
+//              
+//          }
+//
+//          mqttclient.publish(topic,report);
+//          JMRI_HELPER::logging(1,F("Message sent on topic: %s. Message: %s\n"), topic, report);
+//          //JMRI_HELPER::sendConsole(mess);
+//                     
+//}

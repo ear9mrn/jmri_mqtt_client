@@ -2,14 +2,16 @@
 #define JMRI_WEB_h
 
 #include "config.h"
-#include "newconfig.h"
+#include "headers.h"
 #include <ESPAsyncWebServer.h>
+
+extern jmriData jmri_data;
 
 class JMRI_WEB{
 
     public:
     
-        static void   web_init(jmriData *jmri_data);
+        static void   web_init();
         static void   notFound(AsyncWebServerRequest *request);
         static void   update_mqtt_host(char* mqtt_host);
         static void   update_mqtt_port(ushort mqtt_port);
@@ -25,9 +27,6 @@ class JMRI_WEB{
         static AsyncWebServer server;
         static AsyncEventSource events;
         static bool    _shouldReboot;
-        static jmriData *jmri_ptr;
 
 };
-
-
 #endif
