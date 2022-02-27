@@ -25,10 +25,6 @@ For the example of a sensor it works in the opposite manner. The JMRI accessory 
 Below is a simple MQTT block diagram. The MQTT broker acts as a middle man between JMRI and any clients connected to the same broker. There is no limit to the number of JMRI MQTT clients (IP addresses). 
 
 
-
-
-
-
 Simple setup example.
 
     1. Enable MQTT within JMRI:
@@ -54,24 +50,13 @@ Simple setup example.
 In this example we will connect one servo
        
 
-
-
 ![esp8266_serov](https://user-images.githubusercontent.com/471260/155894646-a6245006-ab70-4377-8d93-c290d3aeb227.png)
-
-
-
-
 
 
 Connect the ESP8266 to your PC using a USB cable. Download and upload the JMRI Accessory MQTT client script from the following github repository https://github.com/ear9mrn/jmri_mqtt_client.  Once installed power cycle the board, watch the serial output to see if things are working correctly, next step instructions are also provided there. 
 
 
-
-
 ![image](https://user-images.githubusercontent.com/471260/155894663-4467aba4-fe3b-4a06-bea7-72d99670e2c2.png)
-
-
-
 
 Next step is to connect the ESP8266 to your local WiFi. During the initiation process the ESP8266 will create its on access point with a SSID that looks something like “JMRI-ACC-E8:DB:84:E0:A7:96”. 
 
@@ -84,23 +69,6 @@ If you have the serial monitor open you should see output indicating WiFi connec
 
 
 ![image](https://user-images.githubusercontent.com/471260/155894700-55b98fca-09ae-47e1-9df1-418d9cebbc50.png)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 You should now be able to navigate with any browser on the same network to the IP address that was assigned to your ESP8266 device (see serial monitor output), in the example this is 192.168.1.144. When you do this (and everything has worked correctly) you should be presented with the client configuration page. 
@@ -148,7 +116,6 @@ Now connect pin 1 (D1) to ground and you should see the colour of the state dot 
 
 
 ![sensor_test](https://user-images.githubusercontent.com/471260/155894797-4cb98d75-e2f1-4f1e-874f-bc3ec9a27b89.png)
-
 
 
 
