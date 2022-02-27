@@ -28,7 +28,7 @@ Below is a simple MQTT block diagram. The MQTT broker acts as a middle man betwe
 ![image](https://user-images.githubusercontent.com/471260/155894597-63b46d57-ea2e-4219-ae96-281ce6b25830.png)
        
        
-Simple setup example.
+Simple broker setup example.
 
     1. Enable MQTT within JMRI:
        Under File->preferences->Connections add a new tab and select MQTT under “System manufacture” and “MQTT Connection” under System connections. Then set the IP address or hostname of the machine that is/will run the MQTT broker. In my case JMRI and mosquitto (Linux MQTT server) are running on the same machine.
@@ -58,11 +58,11 @@ Connect the ESP8266 to your PC using a USB cable. Download and upload the JMRI A
 
 ![image](https://user-images.githubusercontent.com/471260/155894663-4467aba4-fe3b-4a06-bea7-72d99670e2c2.png)
 
-Next step is to connect the ESP8266 to your local WiFi. During the initiation process the ESP8266 will create its on access point with a SSID that looks something like “JMRI-ACC-E8:DB:84:E0:A7:96”. 
+Next step is to connect the ESP8266 to your local WiFi. During the initiation process the ESP8266 will create its own access point with an SSID that looks something like “JMRI-ACC-E8:DB:84:E0:A7:96”. 
 
 The simplest method is to connect to this access point with a smart phone (no password is required). Then enter the following IP address (192.168.4.1) into a browser on your smartphone. You should be presented with a list of visible local access points enter the name of the access point you wish to connect to (needs to be the same network as the MQTT broker) and the password, hit submit.
 
-If you have the serial monitor open you should see output indicating WiFi connection established.
+If you have the serial monitor open you should see output indicating that a WiFi connection is established.
 
 
 ![image](https://user-images.githubusercontent.com/471260/155894694-8557c8ca-02e6-4717-9a3b-be889d5102f4.png)
@@ -70,7 +70,7 @@ If you have the serial monitor open you should see output indicating WiFi connec
 ![image](https://user-images.githubusercontent.com/471260/155894700-55b98fca-09ae-47e1-9df1-418d9cebbc50.png)
 
 
-You should now be able to navigate with any browser on the same network to the IP address that was assigned to your ESP8266 device (see serial monitor output), in the example this is 192.168.1.144. When you do this (and everything has worked correctly) you should be presented with the client configuration page. 
+You should now be able to navigate with any browser on the same network to the IP address that was assigned to your ESP8266 device (see serial monitor output), in this example this is 192.168.1.144. When you do this (and everything has worked correctly) you should be presented with the client configuration page. 
 
 ![image](https://user-images.githubusercontent.com/471260/155894708-4b0294b8-cd46-4b1f-9ad4-c0360d1f66d3.png)
 
@@ -151,5 +151,16 @@ Select the appropriate tab to configure the attached boards. The board name can 
 ![image](https://user-images.githubusercontent.com/471260/155901179-f19aa8a4-1eef-453f-bed1-f3551a05a306.png)
 
 
+Connecting  PCF8575 boards.
+
+As these are I/O boards an additional interrupt line has to be attached to the ESP8266.  Pins 1,2,5,6,7 can be used as interrupt pins (this why we are limited to 5 of these boards). 
+
+
+![interrupt](https://user-images.githubusercontent.com/471260/155902443-ecf75062-2d3a-4e4b-9d40-888d6cd679eb.png)
+
+
+The SDA and SCL are connected as normal (and 5V and GND to external supply). But in addition the interrupt (INT) is connected to D1.  D1 will automatically be disable for use in the configuration if an I/O board is attached.
+
+It is important that the I/O interrupts are connected to the right pin on the EPS8266 as they are assigned in numerical order of increasing I2C address. Pins 1,2,5,6,7 are used, pin1 first board (lowest I2C address), pin 2 for the next highest I2C address etc. This pins are only set to interrupt if boards are connected otherwise they can be used as standard I/O pins. 
 
 
