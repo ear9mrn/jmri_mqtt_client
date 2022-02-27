@@ -22,6 +22,9 @@ For the example of a sensor it works in the opposite manner. The JMRI accessory 
 
 Below is a simple MQTT block diagram. The MQTT broker acts as a middle man between JMRI and any clients connected to the same broker. There is no limit to the number of JMRI MQTT clients (IP addresses). 
 
+![block](https://user-images.githubusercontent.com/471260/155901574-b8f28dc8-12a8-4d75-8083-562dd6f77d41.png)
+
+
 ![image](https://user-images.githubusercontent.com/471260/155894597-63b46d57-ea2e-4219-ae96-281ce6b25830.png)
        
        
