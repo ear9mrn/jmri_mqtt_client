@@ -1,4 +1,23 @@
-
+/*
+ *  © 2022 Pete Nevill
+ *  All rights reserved.
+ *
+ *  This file is part of JMRI MQTT Accesssory Client
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
+ 
 #include "jmri_i2c.h"
 
 bool  JMRI_I2C::_i2cUpdate = false;
@@ -16,7 +35,7 @@ void JMRI_I2C::i2c_init() {
         
             JMRI_STORE::getBaseInfo();
             for (uint8_t j=1; j<jmri_data.nDevices; j++){
-                jmri_data.boardinfo[j].i2caddr = 0;
+                jmri_data.boardinfo[j].addr = 0;
             }
             JMRI_STORE::configSetup();
             jmri_data.nDevices = 1;
@@ -43,7 +62,7 @@ void JMRI_I2C::i2c_init() {
 
             //is the address already in our list?
             for (uint8_t j=1; j<jmri_data.nDevices; j++){
-                if (jmri_data.boardinfo[j].i2caddr == address){
+                if (jmri_data.boardinfo[j].addr == address){
                    JMRI_HELPER::logging(1,F("####Multiple I2C device found at address %x\n"), (int)address);  
                    JMRI_HELPER::logging(1,F("\n####Ignoring, could lead to unpredictable results, please fix..\n"));
                    unique = false;
@@ -80,7 +99,7 @@ void JMRI_I2C::i2c_init() {
 
                       //search "eeprom" for existing I2C devices with same address
                       for (uint8_t j=0; j<DEVICES; j++){
-                          if (address == jmri_data.data.i2c_addr[j]){
+                          if (address == jmri_data.data.addr[j]){
                               JMRI_HELPER::logging(1,F("I2C PCA9685 device found at address %x\n"), (int)address);  
                               JMRI_HELPER::logging(1,F("Located data in EEPROM, retrieving..."));                                                        
                               JMRI_STORE::getBoardInfo(j ,jmri_data.nDevices);                                                          
@@ -89,10 +108,10 @@ void JMRI_I2C::i2c_init() {
 
                           if (j == DEVICES-1){
                               JMRI_HELPER::logging(1,F("New I2C PCA9685 device found at address %x\n"), (int)address);          
-                              jmri_data.devdata[jmri_data.nDevices].i2c_addr = (uint8_t)address;
+                              jmri_data.devdata[jmri_data.nDevices].addr = (uint8_t)address;
 
                               if (JMRI_STORE::eepromCap() <= DEVICES){
-                                  jmri_data.data.i2c_addr[JMRI_STORE::eepromCap()] = (uint8_t)address;
+                                  jmri_data.data.addr[JMRI_STORE::eepromCap()] = (uint8_t)address;
                                   jmri_data.boardinfo[jmri_data.nDevices].eepromaddr = JMRI_STORE::eepromCap();
                                   JMRI_STORE::inc_eepromCap();  //increment++
                                   JMRI_STORE::saveBoard(&jmri_data.nDevices);
@@ -106,11 +125,11 @@ void JMRI_I2C::i2c_init() {
                       jmri_data.boardinfo[jmri_data.nDevices].pwm.setPWMFreq(FREQUENCY);
 
                       //save board address
-                      jmri_data.boardinfo[jmri_data.nDevices].i2caddr = (uint8_t)address;
-                      jmri_data.boardinfo[jmri_data.nDevices].i2ctype = PCA9685;                      
-                      jmri_data.devdata[jmri_data.nDevices].i2c_addr = (uint8_t)address;
+                      jmri_data.boardinfo[jmri_data.nDevices].addr = (uint8_t)address;
+                      jmri_data.boardinfo[jmri_data.nDevices].type = PCA9685;                      
+                      jmri_data.devdata[jmri_data.nDevices].addr = (uint8_t)address;
 
-                      JMRI_HELPER::logging(2,F("Board: %d, Type: %d\n"),jmri_data.nDevices, jmri_data.boardinfo[jmri_data.nDevices].i2ctype );                
+                      JMRI_HELPER::logging(2,F("Board: %d, Type: %d\n"),jmri_data.nDevices, jmri_data.boardinfo[jmri_data.nDevices].type );                
                       jmri_data.nDevices++;
                       jmri_data.nPCADev++;
                     
@@ -121,7 +140,7 @@ void JMRI_I2C::i2c_init() {
 
                       //search "eeprom" for existing I2C devices with same address
                       for (uint8_t j=0; j<DEVICES; j++){
-                          if (address == jmri_data.data.i2c_addr[j]){
+                          if (address == jmri_data.data.addr[j]){
                               JMRI_HELPER::logging(1,F("I2C PCF8575 device found at address %x\n"), (int)address);  
                               JMRI_HELPER::logging(1,F("Located data in EEPROM, retrieving..."));
                               JMRI_STORE::getBoardInfo(j ,jmri_data.nDevices);     
@@ -131,10 +150,10 @@ void JMRI_I2C::i2c_init() {
 
                           if (j == DEVICES-1){
                               JMRI_HELPER::logging(1,F("New I2C PCF8575 device found at address %x\n"), (int)address);
-                              jmri_data.devdata[jmri_data.nDevices].i2c_addr = (uint8_t)address;
+                              jmri_data.devdata[jmri_data.nDevices].addr = (uint8_t)address;
 
                               if (JMRI_STORE::eepromCap() <= DEVICES){
-                                  jmri_data.data.i2c_addr[JMRI_STORE::eepromCap()] = (uint8_t)address;
+                                  jmri_data.data.addr[JMRI_STORE::eepromCap()] = (uint8_t)address;
                                   jmri_data.boardinfo[jmri_data.nDevices].eepromaddr = JMRI_STORE::eepromCap();
                                   JMRI_STORE::inc_eepromCap(); 
                                   JMRI_STORE::saveBoard(&jmri_data.nDevices);
@@ -147,25 +166,25 @@ void JMRI_I2C::i2c_init() {
                       jmri_data.boardinfo[jmri_data.nDevices].PCF.begin();
 
                       //save I2C address                                        
-                      jmri_data.boardinfo[jmri_data.nDevices].i2caddr = (uint8_t)address;
-                      jmri_data.boardinfo[jmri_data.nDevices].i2ctype = PCF857x;
-                      jmri_data.devdata[jmri_data.nDevices].i2c_addr = (uint8_t)address;
+                      jmri_data.boardinfo[jmri_data.nDevices].addr = (uint8_t)address;
+                      jmri_data.boardinfo[jmri_data.nDevices].type = PCF857x;
+                      jmri_data.devdata[jmri_data.nDevices].addr = (uint8_t)address;
                
                       //read sensor state of all pins
                       jmri_data.boardinfo[jmri_data.nDevices].sensorState = jmri_data.boardinfo[jmri_data.nDevices].PCF.read16();
 
                       //detatch interrupts for main board so new one can be attached
                       uint8_t pinInter = pintable[intrrupt[jmri_data.nPCFDev]];
-                      JMRI_HELPER::logging(2,F("Board: %d, Type: %d\n"),jmri_data.nDevices, jmri_data.boardinfo[jmri_data.nDevices].i2ctype );                                                                                                      
-                      if( jmri_data.devdata[0].i2c_mode  [intrrupt[jmri_data.nPCFDev]] == 'S' ) {
+                      JMRI_HELPER::logging(2,F("Board: %d, Type: %d\n"),jmri_data.nDevices, jmri_data.boardinfo[jmri_data.nDevices].type );                                                                                                      
+                      if( jmri_data.devdata[0].mode  [intrrupt[jmri_data.nPCFDev]] == 'S' ) {
                         detachInterrupt(digitalPinToInterrupt(pinInter));
                       }
 
                       //setup interrupt 
                       pinMode(pinInter, INPUT_PULLUP);
                       attachInterruptArg(digitalPinToInterrupt(pinInter), JMRI_STORE::pinISR_PCF, jmri_data.boardinfo[jmri_data.nDevices].ptr[0], FALLING);
-                      jmri_data.devdata[0].i2c_names [intrrupt[jmri_data.nPCFDev]]  =   0;
-                      jmri_data.devdata[0].i2c_mode  [intrrupt[jmri_data.nPCFDev]]  =  'S';                 
+                      jmri_data.devdata[0].names [intrrupt[jmri_data.nPCFDev]]  =   0;
+                      jmri_data.devdata[0].mode  [intrrupt[jmri_data.nPCFDev]]  =  'S';                 
                       sprintf(jmri_data.devdata[0].desc[intrrupt[jmri_data.nPCFDev]],"PCFbrd %d", jmri_data.nDevices);                 
 
                       jmri_data.nPCFDev++;
@@ -255,7 +274,7 @@ void JMRI_I2C::PCF_Change(uint8_t pcf_board){
         //save new state to memory
         jmri_data.boardinfo[pcf_board].sensorState = x;
 
-        if (jmri_data.devdata[pcf_board].i2c_mode[wbit] == 'S' && wbit <=15 ){
+        if (jmri_data.devdata[pcf_board].mode[wbit] == 'S' && wbit <=15 ){
 
               Inter inter;
               inter.a = pcf_board; //board

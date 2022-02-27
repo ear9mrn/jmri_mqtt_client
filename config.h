@@ -1,3 +1,23 @@
+/*
+ *  © 2022 Pete Nevill
+ *  All rights reserved.
+ *
+ *  This file is part of JMRI MQTT Accesssory Client
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef JMRI_CONFIG_h
 #define JMRI_CONFIG_h
 
@@ -39,7 +59,7 @@
 #define   DEFAULT_PULSE_WIDTH   1500
 #define   FREQUENCY             50
 
-#define   EESTORE_ID "JMRI"               //first 4 charaters of eeprom to determin if store exists
+#define   EESTORE_ID "JMRIx"               //first 4 charaters of eeprom to determin if store exists
 #define   UNUSED(x) (void)(x)
 
 /* pin mapping ESP8266
@@ -74,7 +94,7 @@ struct EEStoreData{
         char    mqtt_topic [20];
         char    ssid[33];
         char    pass[65];
-        uint8_t i2c_addr[DEVICES];   
+        uint8_t addr[DEVICES];   
         uint8_t loglvl;                   //0=none,1=info,2=verbose;
         
 };
@@ -82,15 +102,15 @@ struct EEStoreData{
 //board information saved to eeprom. maximum 11 additional boards
 struct EEStoreDevData{   
           
-        uint8_t i2c_addr;                     //I2C address (has to be unique)
-        char    bdesc      [21];              //name or description for each board
-        ushort  i2c_names  [I2C_PINS];        //JMRI sysname 0-65535
-        char    i2c_mode   [I2C_PINS];        //pin mode ('T'==turnout,'L'==light,'S'==sensor)
-        char    i2c_state  [I2C_PINS];        //pin state. Remember last state of light or turnout 'T'==thrown,'C',closed,'N'==on,'F'==off
-        bool    i2c_pwm    [I2C_PINS];        //Is turnout digital (O/1) or PWM.
-        uint8_t lang       [I2C_PINS];        //For PWM low angle of servo.
-        uint8_t hang       [I2C_PINS];        //For PWM high angle of servo.
-        char    desc       [I2C_PINS][11];    //Brief description of attached device 10 char limit.
+        uint8_t addr;                     //I2C address (has to be unique)
+        char    bdesc       [21];              //name or description for each board
+        ushort  names       [I2C_PINS];        //JMRI sysname 0-65535
+        char    mode        [I2C_PINS];        //pin mode ('T'==turnout,'L'==light,'S'==sensor)
+        char    state       [I2C_PINS];        //pin state. Remember last state of light or turnout 'T'==thrown,'C',closed,'N'==on,'F'==off
+        bool    pwm         [I2C_PINS];        //Is turnout digital (O/1) or PWM.
+        uint8_t lang        [I2C_PINS];        //For PWM low angle of servo.
+        uint8_t hang        [I2C_PINS];        //For PWM high angle of servo.
+        char    desc        [I2C_PINS][11];    //Brief description of attached device 10 char limit.
         
 };
   
@@ -99,8 +119,8 @@ struct EEStoreDevData{
 struct binfo { 
 
         uint8_t   eepromaddr;                 //address of board info in EEPROM
-        uint8_t   i2caddr;                    //I2C address (has to be unique)
-        uint8_t   i2ctype;                    //board type
+        uint8_t   addr;                       //I2C address (has to be unique)
+        uint8_t   type;                       //board type
         uint8_t   interrupt[I2C_PINS][2];     //interrupt contains board and pin info that is sent to the interrupt.
         void      *ptr[I2C_PINS];             //interrupt pointer to info above
         uint16_t  sensorState = 0;            //Sensor state

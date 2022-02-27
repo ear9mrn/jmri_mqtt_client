@@ -1,4 +1,23 @@
-
+/*
+ *  © 2022 Pete Nevill
+ *  All rights reserved.
+ *
+ *  This file is part of JMRI MQTT Accesssory Client
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
+ 
 #include "jmri_helper.h"
 
 
@@ -19,52 +38,60 @@ void JMRI_HELPER::setTurnout(ushort sysname, char* message){
                 for (uint8_t i = 0; i<pins; i++){ 
 
                      //if system name matches and mode is 'T' (turnout) do something
-                     if (jmri_data.devdata[j].i2c_names[i] == sysname && jmri_data.devdata[j].i2c_mode[i] == 'T') {
+                     if (jmri_data.devdata[j].names[i] == sysname && jmri_data.devdata[j].mode[i] == 'T') {
 
-                          //Serial.printf("board: %d, sysname: %d, Message: %s Type: %d\n", j, sysname, message, jmri_data.boardinfo[j].i2ctype);
+                          //Serial.printf("board: %d, sysname: %d, Message: %s Type: %d\n", j, sysname, message, jmri_data.boardinfo[j].type);
                           //action for message THROWN
                           //logging(2,"board: %d pin: %d\n", j, i ); 
                           if ( strcmp(message,"THROWN")==0 ){ 
                             
                                 newstate = 'T';                                                    
                                                                         
-                                if (jmri_data.boardinfo[j].i2ctype == PCA9685) {
+                                if (jmri_data.boardinfo[j].type == PCA9685) {
                                   
-                                        if (jmri_data.devdata[j].i2c_pwm[i]){   //if this a PWM device                          
+                                        if (jmri_data.devdata[j].pwm[i]){   //if this a PWM device                          
                                            jmri_data.boardinfo[j].pwm.setPWM(i, 0, JMRI_I2C::pulseWidth(jmri_data.devdata[j].hang[i]));
                                         } else {
                                            jmri_data.boardinfo[j].pwm.setPWM(i, 4096, 0);
                                         }
                                         
-                                }  else if (jmri_data.boardinfo[j].i2ctype == PCF857x ) {
+                                }  else if (jmri_data.boardinfo[j].type == PCF857x ) {
                                   
                                         jmri_data.boardinfo[j].PCF.write(i, LOW); 
                                                                
                                 // ESP8266
                                 } else {  
-                                        jmri_data.servos[i].write(jmri_data.devdata[j].hang[i]);
+                                        if (jmri_data.devdata[j].pwm[i]){ //if this a PWM device 
+                                              jmri_data.servos[i].write(jmri_data.devdata[j].hang[i]);
+                                        } else {
+                                              digitalWrite(pintable[i], 1);
+                                        }
                                 }
                                 
                           } else {
                                 //action for message CLOSED
                                 newstate = 'C';
-                                if (jmri_data.boardinfo[j].i2ctype == PCA9685) {
+                                if (jmri_data.boardinfo[j].type == PCA9685) {
                                   
-                                        if (jmri_data.devdata[j].i2c_pwm[i]){ //if this a PWM device 
+                                        if (jmri_data.devdata[j].pwm[i]){ //if this a PWM device 
                                             jmri_data.boardinfo[j].pwm.setPWM(i, 0, JMRI_I2C::pulseWidth(jmri_data.devdata[j].lang[i]));
                                         } else {
                                             jmri_data.boardinfo[j].pwm.setPWM(i, 0, 4096);
                                         }     
-                                } else if (jmri_data.boardinfo[j].i2ctype == PCF857x )  {
+                                } else if (jmri_data.boardinfo[j].type == PCF857x )  {
                                         jmri_data.boardinfo[j].PCF.write(i, HIGH);  
                                 // ESP8266
                                 } else {  
-                                        jmri_data.servos[i].write(jmri_data.devdata[j].lang[i]);                                        
+                                        if (jmri_data.devdata[j].pwm[i]){ //if this a PWM device 
+                                            jmri_data.servos[i].write(jmri_data.devdata[j].lang[i]);                                        
+                                        } else {
+                                            digitalWrite(pintable[i],0);
+                                        }
                                 }
                           }                      
 
                           //save new state 
-                          jmri_data.devdata[j].i2c_state[i] = newstate;    
+                          jmri_data.devdata[j].state[i] = newstate;    
                           //update dot colour on out web interface
                           setDot(&j, &i, &newstate); 
                           //this delay is required if multiple pins have the same system name
@@ -92,16 +119,16 @@ void JMRI_HELPER::setLight(ushort sysname, char* message){
                 for (uint8_t i = 0; i<pins; i++){ 
 
                    //if system name matches and mode is 'L' (light) do something
-                   if (jmri_data.devdata[j].i2c_names[i] == sysname && jmri_data.devdata[j].i2c_mode[i] == 'L') {
+                   if (jmri_data.devdata[j].names[i] == sysname && jmri_data.devdata[j].mode[i] == 'L') {
                 
                         //Serial.printf("Light: %d State: %s Value: %d\n",sysname, message, jmri_data.data->i2c_value[j][i]);  
                         //action for message OFF
                         //logging(2,F("board: %d pin: %d\n"), j, i ); 
                         if ( strcmp(message,"OFF")==0 ){  
                               newstate = 'F';                              
-                              if (jmri_data.boardinfo[j].i2ctype == PCA9685) {
+                              if (jmri_data.boardinfo[j].type == PCA9685) {
                                   jmri_data.boardinfo[j].pwm.setPWM(i, 0,4096);
-                              } else if (jmri_data.boardinfo[j].i2ctype == PCF857x ){
+                              } else if (jmri_data.boardinfo[j].type == PCF857x ){
                                   jmri_data.boardinfo[j].PCF.write(i, LOW);
                               //ESP8266
                               } else {
@@ -110,9 +137,9 @@ void JMRI_HELPER::setLight(ushort sysname, char* message){
                         } else {
                               //action for message ON
                               newstate = 'N';
-                              if (jmri_data.boardinfo[j].i2ctype == PCA9685) {
+                              if (jmri_data.boardinfo[j].type == PCA9685) {
                                   jmri_data.boardinfo[j].pwm.setPWM(i, 4096, 0);
-                              } else if (jmri_data.boardinfo[j].i2ctype == PCF857x ) {
+                              } else if (jmri_data.boardinfo[j].type == PCF857x ) {
                                   jmri_data.boardinfo[j].PCF.write(i, HIGH);                          
                               //ESP8266
                               } else {
@@ -122,7 +149,7 @@ void JMRI_HELPER::setLight(ushort sysname, char* message){
                         }                      
 
                         //save state, update webinterface and save to eeprom
-                        jmri_data.devdata[j].i2c_state[i] = newstate;
+                        jmri_data.devdata[j].state[i] = newstate;
                         setDot(&j, &i, &newstate);  
                         //this delay is required if multiple pins have the same system name
                         //due time it takes to update (send events) to webserver and updating/commit eeprom 
@@ -140,12 +167,12 @@ void JMRI_HELPER::setRadioButton(uint8_t* board, uint8_t* pinnum, char pmode ){
         Messg messg;
         
         //detach interrupt if this pin is used as a sensor
-        if (jmri_data.devdata[*board].i2c_mode[*pinnum] == 'S' ){
+        if (jmri_data.devdata[*board].mode[*pinnum] == 'S' ){
           detachInterrupt(digitalPinToInterrupt(pintable[*pinnum]));
         }     
 
         //label board/pin with new mode 'T','L','S'
-        jmri_data.devdata[*board].i2c_mode[*pinnum] = pmode;
+        jmri_data.devdata[*board].mode[*pinnum] = pmode;
 
         //if action if new mode is sensor
         if (pmode == 'S' && *board==0){
@@ -163,8 +190,8 @@ void JMRI_HELPER::setRadioButton(uint8_t* board, uint8_t* pinnum, char pmode ){
               //disable webpage dot, update webpage with current state and send MQTT message
               flipDot      (board, pinnum, "off");
               changeSensor (board, pinnum, &newstate);   
-              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].i2c_names[*pinnum], &newstate );  
-              messg.sysname = jmri_data.devdata[*board].i2c_names[*pinnum];
+              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].names[*pinnum], &newstate );  
+              messg.sysname = jmri_data.devdata[*board].names[*pinnum];
               messg.messtate = newstate;
               jmri_data.messg.push(messg);      
 
@@ -179,7 +206,7 @@ void JMRI_HELPER::setRadioButton(uint8_t* board, uint8_t* pinnum, char pmode ){
               //disable webpage dot, update webpage with current state and send MQTT message              
               flipDot      (board, pinnum, "off");
               changeSensor (board, pinnum, &newstate);
-              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].i2c_names[*pinnum], &newstate );     
+              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].names[*pinnum], &newstate );     
 
         //actions for change to light mode.
         } else if ( pmode == 'L') { 
@@ -191,9 +218,9 @@ void JMRI_HELPER::setRadioButton(uint8_t* board, uint8_t* pinnum, char pmode ){
 
               //enable webpage dot, update webpage with current state and send MQTT message
               flipDot(board, pinnum, "on");
-              jmri_data.devdata[*board].i2c_state[*pinnum] = newstate;                           
-              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].i2c_names[*pinnum], &newstate );  
-              messg.sysname = jmri_data.devdata[*board].i2c_names[*pinnum];
+              jmri_data.devdata[*board].state[*pinnum] = newstate;                           
+              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].names[*pinnum], &newstate );  
+              messg.sysname = jmri_data.devdata[*board].names[*pinnum];
               messg.messtate = newstate;
               jmri_data.messg.push(messg);                         
 
@@ -210,10 +237,10 @@ void JMRI_HELPER::setRadioButton(uint8_t* board, uint8_t* pinnum, char pmode ){
               newstate = 'C';
               
               //save new state, attach to servo array for ESP8266 and send MQTT message
-              jmri_data.devdata[*board].i2c_state[*pinnum] = newstate;                                
+              jmri_data.devdata[*board].state[*pinnum] = newstate;                                
               if ( *board == 0 ) jmri_data.servos[*pinnum].attach( pintable[*pinnum], MIN_PULSE_WIDTH, MAX_PULSE_WIDTH); 
-              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].i2c_names[*pinnum], &newstate );                              
-              messg.sysname = jmri_data.devdata[*board].i2c_names[*pinnum];
+              //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].names[*pinnum], &newstate );                              
+              messg.sysname = jmri_data.devdata[*board].names[*pinnum];
               messg.messtate = newstate;
               jmri_data.messg.push(messg); 
               
@@ -230,7 +257,7 @@ void JMRI_HELPER::setPWMCheck(uint8_t* board, uint8_t* pinnum, bool* newstate ){
 
         logging(2,F("Board: %d, pin: %d: state: %d\n"), *board, *pinnum, *newstate);
         //update state in struct and save to eeprom 
-        jmri_data.devdata[*board].i2c_pwm[*pinnum] = *newstate;
+        jmri_data.devdata[*board].pwm[*pinnum] = *newstate;
         JMRI_STORE::saveBoard(board);  
         
 }
@@ -258,13 +285,13 @@ void JMRI_HELPER::setDot(uint8_t *board, uint8_t* pinnum, char* state ){
 //function called when a change to sensor state is detected (via interrupt)
 void  JMRI_HELPER::changeSensor(uint8_t *board, uint8_t *pinnum, char* newstate){
         
-        //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].i2c_names[*pinnum], newstate );
+        //JMRI_MQTT::sendMessage(jmri_data.devdata[*board].names[*pinnum], newstate );
         Messg messg;
-        messg.sysname = jmri_data.devdata[*board].i2c_names[*pinnum];
+        messg.sysname = jmri_data.devdata[*board].names[*pinnum];
         messg.messtate = *newstate;
         jmri_data.messg.push(messg); 
               
-        jmri_data.devdata[*board].i2c_state[*pinnum] = *newstate;    
+        jmri_data.devdata[*board].state[*pinnum] = *newstate;    
         setDot(board, pinnum, newstate);
         //logging(2,F("Interrupt Detected. Board: %d, Pin: %d, State: %c\n"), *board, *pinnum, *newstate);           
                         

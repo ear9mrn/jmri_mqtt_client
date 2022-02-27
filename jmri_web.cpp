@@ -1,5 +1,23 @@
-
-
+/*
+ *  © 2022 Pete Nevill
+ *  All rights reserved.
+ *
+ *  This file is part of JMRI MQTT Accesssory Client
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
+ 
 #include "jmri_web.h"
 
 AsyncWebServer    JMRI_WEB::server(80);
@@ -269,8 +287,8 @@ void JMRI_WEB::web_init(){
                      for (uint8_t i=0; i<total; i++){   
                               jsonIndexList(buff, "addr", i, &result);          
                               //Serial.printf("\nresult idx: %d, addre: %s\n", i, result); 
-                              jmri_data.data.i2c_addr[i] = (uint8_t)atoi(result);
-                              jmri_data.devdata[i].i2c_addr = (uint8_t)atoi(result);
+                              jmri_data.data.addr[i] = (uint8_t)atoi(result);
+                              jmri_data.devdata[i].addr = (uint8_t)atoi(result);
                               
                               jsonIndexList(buff, "bdesc", i, &result); 
                               sprintf(jmri_data.devdata[i].bdesc, result);
@@ -278,22 +296,22 @@ void JMRI_WEB::web_init(){
                         for (uint8_t j=0; j<I2C_PINS; j++){ 
                                 jsonIndexList(buff, "names", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, name: %d\n",i ,j, atoi(result)); 
-                                jmri_data.devdata[i].i2c_names[j] = (ushort)atoi(result);
+                                jmri_data.devdata[i].names[j] = (ushort)atoi(result);
 
                                 jsonIndexList(buff, "mode", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, mode: %c\n",i ,j, result[0]); 
-                                jmri_data.devdata[i].i2c_mode[j] = result[0];
+                                jmri_data.devdata[i].mode[j] = result[0];
 
                                 jsonIndexList(buff, "state", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, state: %c\n",i ,j, result[0]); 
-                                jmri_data.devdata[i].i2c_state[j] = result[0];
+                                jmri_data.devdata[i].state[j] = result[0];
 
                                 jsonIndexList(buff, "pwm", i, j, &result);          
                                 //Serial.printf("\nresult board: %d, idx: %d, pwm: %s\n",i ,j, result); 
                                 if (strcmp(result,"true")==0) {
-                                  jmri_data.devdata[i].i2c_pwm[j] = true;
+                                  jmri_data.devdata[i].pwm[j] = true;
                                 } else {
-                                  jmri_data.devdata[i].i2c_pwm[j] = false;
+                                  jmri_data.devdata[i].pwm[j] = false;
                                 }
                                 
                                 jsonIndexList(buff, "lang", i, j, &result);          
@@ -459,8 +477,8 @@ void JMRI_WEB::web_init(){
         uint8_t thepin = (uint8_t)p->value().toInt();
         ushort newName = (ushort)v->value().toInt();
         
-        if (jmri_data.devdata[board].i2c_names[thepin] != newName){       
-            jmri_data.devdata[board].i2c_names[thepin] = newName;   
+        if (jmri_data.devdata[board].names[thepin] != newName){       
+            jmri_data.devdata[board].names[thepin] = newName;   
             JMRI_STORE::saveBoard(&board); 
         }
         
@@ -517,12 +535,12 @@ void JMRI_WEB::web_init(){
         
         if ( hla->value() == "la"  ){
           jmri_data.devdata[board].lang[thepin] = newAngle;
-          if (jmri_data.devdata[board].i2c_state[thepin] == 'C' && board == 0){
+          if (jmri_data.devdata[board].state[thepin] == 'C' && board == 0){
               jmri_data.servos[thepin].write(newAngle);
           }
         } else {
           jmri_data.devdata[board].hang[thepin] = newAngle;
-          if (jmri_data.devdata[board].i2c_state[thepin] == 'T' && board == 0){
+          if (jmri_data.devdata[board].state[thepin] == 'T' && board == 0){
               jmri_data.servos[thepin].write(newAngle);
           }
         }
@@ -622,15 +640,15 @@ void JMRI_WEB::makejson(AsyncResponseStream *response) {
             response->printf("\"addr\":[");
 
             for (b = 0; b<jmri_data.nDevices-1; b++){
-                  response->printf("%d,",(int)jmri_data.devdata[b].i2c_addr);
+                  response->printf("%d,",(int)jmri_data.devdata[b].addr);
             }
-            response->printf("%d]",jmri_data.devdata[jmri_data.nDevices-1].i2c_addr);
+            response->printf("%d]",jmri_data.devdata[jmri_data.nDevices-1].addr);
 
             response->printf(",\"type\":[");
             for (b = 0; b<jmri_data.nDevices-1; b++){
-                  response->printf("%d,",jmri_data.boardinfo[b].i2ctype);
+                  response->printf("%d,",jmri_data.boardinfo[b].type);
             }
-            response->printf("%d]",jmri_data.boardinfo[jmri_data.nDevices-1].i2ctype);
+            response->printf("%d]",jmri_data.boardinfo[jmri_data.nDevices-1].type);
             
             response->printf(",\"bdesc\":[");
             for (b = 0; b<jmri_data.nDevices-1; b++){
@@ -642,12 +660,12 @@ void JMRI_WEB::makejson(AsyncResponseStream *response) {
             for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("%d,",jmri_data.devdata[b].i2c_names[p]);
+                  response->printf("%d,",jmri_data.devdata[b].names[p]);
                 }
                 if (b<jmri_data.nDevices-1){
-                  response->printf("%d],",jmri_data.devdata[b].i2c_names[I2C_PINS-1]);
+                  response->printf("%d],",jmri_data.devdata[b].names[I2C_PINS-1]);
                 } else {
-                  response->printf("%d]}",jmri_data.devdata[b].i2c_names[I2C_PINS-1]);
+                  response->printf("%d]}",jmri_data.devdata[b].names[I2C_PINS-1]);
                 }
              }  
              
@@ -656,12 +674,12 @@ void JMRI_WEB::makejson(AsyncResponseStream *response) {
             for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("\"%c\",",jmri_data.devdata[b].i2c_mode[p]);
+                  response->printf("\"%c\",",jmri_data.devdata[b].mode[p]);
                 }
                 if (b<jmri_data.nDevices-1){
-                  response->printf("\"%c\"],",jmri_data.devdata[b].i2c_mode[I2C_PINS-1]);
+                  response->printf("\"%c\"],",jmri_data.devdata[b].mode[I2C_PINS-1]);
                 } else {
-                  response->printf("\"%c\"]}",jmri_data.devdata[b].i2c_mode[I2C_PINS-1]);
+                  response->printf("\"%c\"]}",jmri_data.devdata[b].mode[I2C_PINS-1]);
                 }
             }
             
@@ -670,12 +688,12 @@ void JMRI_WEB::makejson(AsyncResponseStream *response) {
             for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("\"%c\",",jmri_data.devdata[b].i2c_state[p]);
+                  response->printf("\"%c\",",jmri_data.devdata[b].state[p]);
                 }
                 if (b<jmri_data.nDevices-1){
-                  response->printf("\"%c\"],",jmri_data.devdata[b].i2c_state[I2C_PINS-1]);
+                  response->printf("\"%c\"],",jmri_data.devdata[b].state[I2C_PINS-1]);
                 } else {
-                  response->printf("\"%c\"]}",jmri_data.devdata[b].i2c_state[I2C_PINS-1]);
+                  response->printf("\"%c\"]}",jmri_data.devdata[b].state[I2C_PINS-1]);
                 }
             } 
 
@@ -684,12 +702,12 @@ void JMRI_WEB::makejson(AsyncResponseStream *response) {
             for (b = 0; b<jmri_data.nDevices; b++){
                 response->printf("\"%d\":[",b);
                 for (p = 0; p<I2C_PINS-1; p++){
-                  response->printf("%s,", jmri_data.devdata[b].i2c_pwm[p] ? "true" : "false");
+                  response->printf("%s,", jmri_data.devdata[b].pwm[p] ? "true" : "false");
                 }
                 if (b<jmri_data.nDevices-1){
-                  response->printf("%s],",jmri_data.devdata[b].i2c_pwm[I2C_PINS-1] ? "true" : "false");
+                  response->printf("%s],",jmri_data.devdata[b].pwm[I2C_PINS-1] ? "true" : "false");
                 } else {
-                  response->printf("%s",jmri_data.devdata[b].i2c_pwm[I2C_PINS-1] ? "true" : "false");
+                  response->printf("%s",jmri_data.devdata[b].pwm[I2C_PINS-1] ? "true" : "false");
                 }
             }
 
