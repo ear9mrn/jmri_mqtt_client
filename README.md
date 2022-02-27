@@ -161,6 +161,6 @@ As these are I/O boards an additional interrupt line has to be attached to the E
 
 The SDA and SCL are connected as normal (and 5V and GND to external supply). But in addition the interrupt (INT) is connected to D1.  D1 will automatically be disable for use in the configuration if an I/O board is attached.
 
-It is important that the I/O interrupts are connected to the right pin on the EPS8266 as they are assigned in numerical order of increasing I2C address. Pins 1,2,5,6,7 are used, pin1 first board (lowest I2C address), pin 2 for the next highest I2C address etc. This pins are only set to interrupt if boards are connected otherwise they can be used as standard I/O pins. 
+It is important that the I/O interrupts are connected to the right pin on the EPS8266 as they are assigned in numerical order of increasing I2C address. Pins 1,2,5,6,7 are used, pin1 first board (lowest I2C address), pin 2 for the next highest I2C address etc. The pins are only set to interrupt if boards are connected otherwise they can be used as standard I/O pins. 
 
 

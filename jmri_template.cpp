@@ -48,7 +48,7 @@ void JMRI_HTML::html_init() {
         
         //check if style.css exist in SPIFFS(LittleFS), if not create it.
         //see style.css for the content of index.html
-        if (LittleFS.exists("/jmri_jsx.js") ) {
+        if (LittleFS.exists("/jmri_js.js") ) {
               JMRI_HELPER::logging(2,F("jmri_js.js file present...\n"));
         } else {   
               
