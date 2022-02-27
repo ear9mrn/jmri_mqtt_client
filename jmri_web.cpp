@@ -144,8 +144,12 @@ void JMRI_WEB::web_init(){
             JMRI_HELPER::logging(1,F("I2C rescan requested...\n"));
 
             JMRI_I2C::set_i2cUpdate(true); 
-            //request->send(201, "text/plain", "Button Clicked");
             request->redirect("/");             
+            
+            Event event;  
+            sprintf(event.a, "empty" ); 
+            sprintf(event.b, "refresh");   
+            jmri_data.event.push(event);
                                
     });  
 

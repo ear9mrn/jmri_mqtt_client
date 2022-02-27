@@ -117,9 +117,37 @@ Now connect pin 1 (D1) to ground and you should see the colour of the state dot 
 
 ESP8266 Expansion Board
 
-An option I have found to be helpful is to use expansion board. This provides and I/O pin with an associated GND and 5V pin that enables A three pin servo to be attached directly without additional wiring and keeps things tidy.
+An option I have found to be helpful is to use expansion board. This provides an I/O pin with an associated GND and 5V pin that enables a three pin servo to be attached directly without additional wiring and keeps things tidy.
 
 ![image](https://user-images.githubusercontent.com/471260/155898758-2e3b4d0d-ab7c-4696-9544-2ffb45867cc6.png)
+
+
+JMRI Accessory MQTT Client expansion
+
+JMRI Accessory MQTT Client allows for the addition of expansion boards for additional I/O (using I2C protocol). With the latest version up to 5 PCF8575 boards can be attached and 12 PCA9685 (output only) with the total number of attached boards not to exceed 12 (due to EPROM and memory limitations of the ESP8266). This gives a total of 192 additional pins. This is plug n play, when attached they are self configured and an additional tab should appear on the web configuration. 
+
+
+![boards](https://user-images.githubusercontent.com/471260/155901126-66b8ea85-e729-4a6a-a733-72d700468326.png)
+
+SDA is attached to SD2 (pin GPIO10) and SCL is attached to SD3 (pin GPIO11) of the ESP8266. I2C boards can be daisy chained so any number of boards can be attached to the same line. Only caveat is all boards have to have unique I2C addresses for this to work.
+
+![sda_scl](https://user-images.githubusercontent.com/471260/155901158-9752652a-98f1-4a4c-b685-317c9e31f69c.png)
+
+
+I2C addresses:
+	PCA9685: 0x40 to 0x7F
+	PCF8575: 0x20 to 0x27
+
+JMRI Accessory MQTT Client uses these addresses to identify which boards are attached and automatically configures itself accordingly. You only have to connect the SDA and SCL (and GND 5V) pins to the correct pins on the ESP8266 and the board will automatically appear in the web configuration.
+
+*Warning: Do not try to power any attached boards or servos through the ESP8266 power as it cannot provide the amps required to drive them.  
+
+
+Select the appropriate tab to configure the attached boards. The board name can be edited to help identify them. In this example I have 4 PCA9685 boards attached (these are output only boards so sensor option is disabled). As stated before all configuration is saved to the EEPROM and will survive a reboot, power cycle.
+
+
+![image](https://user-images.githubusercontent.com/471260/155901179-f19aa8a4-1eef-453f-bed1-f3551a05a306.png)
+
 
 
 

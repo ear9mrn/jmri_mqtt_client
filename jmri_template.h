@@ -142,8 +142,14 @@ source.addEventListener('setDot', function(e){
       } else {
             id.style.backgroundColor = "green";
       }  
+
 }, false);
 
+//refresh page
+source.addEventListener('refresh', function(e){ 
+                  location.reload();
+}, false);
+                  
 //function to update changes to MQTT topic
 function updatemqtttopic(){
 
@@ -187,7 +193,7 @@ function i2cScan(){
             if (confirm("Rescan for I2C devices.\nAre you sure?") == true) {
                   var xhr = new XMLHttpRequest();              
                   xhr.open("GET", "/i2cscan", true);
-                  xhr.send();
+                  xhr.send();                
             }
 }
 

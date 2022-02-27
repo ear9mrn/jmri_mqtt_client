@@ -59,7 +59,7 @@
 #define   DEFAULT_PULSE_WIDTH   1500
 #define   FREQUENCY             50
 
-#define   EESTORE_ID "JMRIx"               //first 4 charaters of eeprom to determin if store exists
+#define   EESTORE_ID "JMRI"               //first 4 charaters of eeprom to determin if store exists
 #define   UNUSED(x) (void)(x)
 
 /* pin mapping ESP8266

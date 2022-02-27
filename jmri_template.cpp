@@ -26,7 +26,7 @@ void JMRI_HTML::html_init() {
 
         //check if index.html exist in SPIFFS (LittleFS), if not create it.
         //see htmltemplate.h for the content of index.html
-        if (LittleFS.exists("/indexx.html") ) {
+        if (LittleFS.exists("/index.html") ) {
             JMRI_HELPER::logging(2,F("HTML file present..."));
         } else {   
 
@@ -48,7 +48,7 @@ void JMRI_HTML::html_init() {
         
         //check if style.css exist in SPIFFS(LittleFS), if not create it.
         //see style.css for the content of index.html
-        if (LittleFS.exists("/jmri_js.js") ) {
+        if (LittleFS.exists("/jmri_jsx.js") ) {
               JMRI_HELPER::logging(2,F("jmri_js.js file present...\n"));
         } else {   
               
@@ -62,7 +62,7 @@ void JMRI_HTML::html_init() {
 
        //check if logbox.html exist in SPIFFS(LittleFS), if not create it.
         //see style.css for the content of index.html
-        if (LittleFS.exists("/loggingx.html") ) {
+        if (LittleFS.exists("/logging.html") ) {
               JMRI_HELPER::logging(2,F("logbox.html file present...\n"));
         } else {   
               
