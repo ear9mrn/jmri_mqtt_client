@@ -22,7 +22,7 @@ For the example of a sensor it works in the opposite manner. The JMRI accessory 
 
 Below is a simple MQTT block diagram. The MQTT broker acts as a middle man between JMRI and any clients connected to the same broker. There is no limit to the number of JMRI MQTT clients (IP addresses). 
 
-       ![image](https://user-images.githubusercontent.com/471260/155894597-63b46d57-ea2e-4219-ae96-281ce6b25830.png)
+![image](https://user-images.githubusercontent.com/471260/155894597-63b46d57-ea2e-4219-ae96-281ce6b25830.png)
        
        
 Simple setup example.
@@ -31,9 +31,6 @@ Simple setup example.
        Under File->preferences->Connections add a new tab and select MQTT under “System manufacture” and “MQTT Connection” under System connections. Then set the IP address or hostname of the machine that is/will run the MQTT broker. In my case JMRI and mosquitto (Linux MQTT server) are running on the same machine.
        Leave the last two parameters as default.
 
-       
-
-       
     2. Set up a MQTT broker:
        I am running Ubuntu and to install and run mosquitto MQTT broker is very simple with three commands. 
        
