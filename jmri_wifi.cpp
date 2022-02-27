@@ -60,7 +60,7 @@ void WifiInterface::wifi_setup() {
             
         } 
                
-        JMRI_HELPER::logging(1,F("Heap size: %u\n"), ESP.getFreeHeap());  
+        JMRI_HELPER::logging(2,F("Heap size: %u\n"), ESP.getFreeHeap());  
             
 }
 //scan in AP to get list of broadcast SSID

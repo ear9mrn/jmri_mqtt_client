@@ -22,7 +22,9 @@ For the example of a sensor it works in the opposite manner. The JMRI accessory 
 
 Below is a simple MQTT block diagram. The MQTT broker acts as a middle man between JMRI and any clients connected to the same broker. There is no limit to the number of JMRI MQTT clients (IP addresses). 
 
-
+       ![image](https://user-images.githubusercontent.com/471260/155894597-63b46d57-ea2e-4219-ae96-281ce6b25830.png)
+       
+       
 Simple setup example.
 
     1. Enable MQTT within JMRI:
@@ -30,7 +32,7 @@ Simple setup example.
        Leave the last two parameters as default.
 
        
-       ![image](https://user-images.githubusercontent.com/471260/155894597-63b46d57-ea2e-4219-ae96-281ce6b25830.png)
+
        
     2. Set up a MQTT broker:
        I am running Ubuntu and to install and run mosquitto MQTT broker is very simple with three commands. 
@@ -138,12 +140,12 @@ I2C addresses:
 	PCA9685: 0x40 to 0x7F
 	PCF8575: 0x20 to 0x27
 
-JMRI Accessory MQTT Client uses these addresses to identify which boards are attached and automatically configures itself accordingly. You only have to connect the SDA and SCL (and GND 5V) pins to the correct pins on the ESP8266 and the board will automatically appear in the web configuration.
+JMRI Accessory MQTT Client uses these addresses to identify which boards are attached and automatically configures itself accordingly. You only have to connect the SDA and SCL pins to the correct pins on the ESP8266 (GND and 5V separately) and the board will automatically appear in the web configuration.
 
 *Warning: Do not try to power any attached boards or servos through the ESP8266 power as it cannot provide the amps required to drive them.  
 
 
-Select the appropriate tab to configure the attached boards. The board name can be edited to help identify them. In this example I have 4 PCA9685 boards attached (these are output only boards so sensor option is disabled). As stated before all configuration is saved to the EEPROM and will survive a reboot, power cycle.
+Select the appropriate tab to configure the attached boards. The board name can be edited to help identify them. In this example I have 4 PCA9685 boards attached (these are output only boards so sensor option is disabled). As stated before, all configuration is saved to the EPROM and will survive a reboot, power cycle.
 
 
 ![image](https://user-images.githubusercontent.com/471260/155901179-f19aa8a4-1eef-453f-bed1-f3551a05a306.png)

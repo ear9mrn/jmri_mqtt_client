@@ -27,7 +27,7 @@ void urlupdate(){
     if  ( WiFi.status() == WL_CONNECTED ) {
 
         nextval = 0;
-        JMRI_HELPER::logging(1,F("Heap size: %u\n"), ESP.getFreeHeap());
+        JMRI_HELPER::logging(2,F("Heap size: %u\n"), ESP.getFreeHeap());
         
         BearSSL::WiFiClientSecure wificlientssl;
         bool mfln = wificlientssl.probeMaxFragmentLength("github.com", 443, 512);  
@@ -71,7 +71,7 @@ void urlupdate(){
             break;
         }
         
-        JMRI_HELPER::logging(1,F("Heap size: %u\n"), ESP.getFreeHeap());
+        JMRI_HELPER::logging(2,F("Heap size: %u\n"), ESP.getFreeHeap());
     }
      jmri_data.urlUpdate = 0.0;
 }
