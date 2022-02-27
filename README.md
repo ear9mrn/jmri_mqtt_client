@@ -67,7 +67,6 @@ If you have the serial monitor open you should see output indicating WiFi connec
 
 ![image](https://user-images.githubusercontent.com/471260/155894694-8557c8ca-02e6-4717-9a3b-be889d5102f4.png)
 
-
 ![image](https://user-images.githubusercontent.com/471260/155894700-55b98fca-09ae-47e1-9df1-418d9cebbc50.png)
 
 
