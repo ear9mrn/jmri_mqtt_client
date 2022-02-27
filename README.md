@@ -1,6 +1,6 @@
 ﻿JMRI Accessory MQTT Client
 
-Introduction
+Introduction:
 JMRI Accessory MQTT client is a web client based on the ESP8266 development board.
 
 
@@ -113,6 +113,13 @@ Now connect pin 1 (D1) to ground and you should see the colour of the state dot 
 
 
 ![sensor_test](https://user-images.githubusercontent.com/471260/155894797-4cb98d75-e2f1-4f1e-874f-bc3ec9a27b89.png)
+
+
+ESP8266 Expansion Board
+
+An option I have found to be helpful is to use expansion board. This provides and I/O pin with an associated GND and 5V pin that enables A three pin servo to be attached directly without additional wiring and keeps things tidy.
+
+![image](https://user-images.githubusercontent.com/471260/155898758-2e3b4d0d-ab7c-4696-9544-2ffb45867cc6.png)
 
 
 
