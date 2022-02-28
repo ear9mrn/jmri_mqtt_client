@@ -42,7 +42,7 @@ void WifiInterface::wifi_setup() {
 
         disconnectedEventHandler = WiFi.onStationModeDisconnected([](const WiFiEventStationModeDisconnected& event){
             UNUSED(event);
-            JMRI_HELPER::logging(1,F("\nWiFi lost connection"));
+            JMRI_HELPER::logging(1,F("\nWiFi lost connection, trying to reconnect."));
         });
         
         // Wait some time (xx seconds) to connect to wifi
@@ -50,10 +50,31 @@ void WifiInterface::wifi_setup() {
         for(int i = 0; i < WIFITIMEOUT && WiFi.status() != WL_CONNECTED; i++) {
             JMRI_HELPER::logging(1,F("."));
             delay(800);
+        } 
+	
+	if (WiFi.status() != WL_CONNECTED && 
+	   strcmp(DEFAULTSSID, jmri_data.data.ssid) != 0 && 
+	   strcmp(DEFAULTPASSWORD, jmri_data.data.pass) != 0 ) {
+
+	   JMRI_HELPER::logging(1,F("\nProblem connecting to WiFi with saved credenntials, trying user defined!\n"));
+     JMRI_HELPER::logging(1,F("Saved SSID: %s, saved Pass: %s\n\n"), jmri_data.data.ssid, jmri_data.data.pass );
+	   WiFi.begin(DEFAULTSSID, DEFAULTPASSWORD);
+     JMRI_HELPER::logging(1,F("Waiting for Wifi to come up..."));
+        for(int i = 0; i < WIFITIMEOUT && WiFi.status() != WL_CONNECTED; i++) {
+            JMRI_HELPER::logging(1,F("."));
+            delay(800);
         }
+     if (WiFi.status() == WL_CONNECTED ) {
+        JMRI_HELPER::logging(1,F("Saveing credentials...\n"));
+        sprintf(jmri_data.data.ssid, DEFAULTSSID);
+        sprintf(jmri_data.data.pass, DEFAULTPASSWORD);    
+        JMRI_STORE::saveConfig();
+     }
+ 
+	}
           
         //failed. So request a new ssid and password
-        if (WiFi.status() != WL_CONNECTED ) {//&& _ssidupdate == false){
+        if (WiFi.status() != WL_CONNECTED ) {
             JMRI_HELPER::logging(1,F("\nProblem connecting to wifi with existing credentials.\nAssuming a reset is required...\n"));
             JMRI_HELPER::logging(1,F("SSID: %s Pass: %s\n\n"), jmri_data.data.ssid, jmri_data.data.pass );
             scan();

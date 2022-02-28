@@ -182,7 +182,6 @@ void JMRI_STORE::configeeprom(){
         sprintf(jmri_data.data.ssid, DEFAULTSSID);
         sprintf(jmri_data.data.pass, DEFAULTPASSWORD);    
         jmri_data.data.loglvl = 1; 
-        //sprintf(jmri_data.data.version, VERSION);
 
         resetBoardinfo();
          
@@ -243,6 +242,7 @@ void IRAM_ATTR JMRI_STORE::pinISR_PCF(void * myarg){
 }
 
 //save all data to the eeprom store
+
 void JMRI_STORE::save()
 {   
            
@@ -263,16 +263,12 @@ void JMRI_STORE::save()
 //save just main config to the eeprom store
 void JMRI_STORE::saveConfig() {
 
-      //while (jmri_data.eepromblock) {}
-      //jmri_data.eepromblock = true;
-
       for(uint8_t i=0; i<DEVICES; i++){
          jmri_data.data.addr[i] = jmri_data.devdata[i].addr;
       }
         
       EEPROM.put(0,jmri_data.data);
       EEPROM.commit(); 
-      //jmri_data.eepromblock = false;
       
 }
 
