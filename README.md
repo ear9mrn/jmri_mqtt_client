@@ -8,7 +8,7 @@ JMRI Accessory MQTT client is a web client based on the ESP8266 development boar
 
 
 Key benefits:
-	-Fully web based configuration, no coding required
+        -Fully web based configuration, no coding required
 	-Connection to JMRI is via WiFi enabling multiple clients
 	-Supports both input and output (turn-outs/lights/sensors) 
 	-Plug-n-play additional I/O boards such as PCF857x and PCA9685
