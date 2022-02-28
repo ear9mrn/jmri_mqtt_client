@@ -83,7 +83,7 @@ You should now be able to navigate with any browser on the same network to the I
 
 
 
-First set the IP address of the MQTT broker you are running (same IP address set in the JMRI setup) hit update.
+First set the IP address of the MQTT broker you are running (same IP address set in the JMRI setup, do not use "localhost") hit update.
 
 *Note: all parameters (enter/updated) are saved to the ESP8266 EPROM and so will survive a reboot or power cycle. 
 
