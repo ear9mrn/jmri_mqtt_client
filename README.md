@@ -58,6 +58,12 @@ Connect the ESP8266 to your PC using a USB cable. Download and upload the JMRI A
 
 ![image](https://user-images.githubusercontent.com/471260/155894663-4467aba4-fe3b-4a06-bea7-72d99670e2c2.png)
 
+The easiest way to connect to your local WiFi is to edit the credentials.h file adding your SSID and password. Alternatively follow the next steps.
+
+#define   DEFAULTSSID              "ssid"
+#define   DEFAULTPASSWORD          "pass"
+
+
 Next step is to connect the ESP8266 to your local WiFi. During the initiation process the ESP8266 will create its own access point with an SSID that looks something like “JMRI-ACC-E8:DB:84:E0:A7:96”. 
 
 The simplest method is to connect to this access point with a smart phone (no password is required). Then enter the following IP address (192.168.4.1) into a browser on your smartphone. You should be presented with a list of visible local access points enter the name of the access point you wish to connect to (needs to be the same network as the MQTT broker) and the password, hit submit.
