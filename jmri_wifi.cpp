@@ -56,7 +56,7 @@ void WifiInterface::wifi_setup() {
 	   strcmp(DEFAULTSSID, jmri_data.data.ssid) != 0 && 
 	   strcmp(DEFAULTPASSWORD, jmri_data.data.pass) != 0 ) {
 
-	   JMRI_HELPER::logging(1,F("\nProblem connecting to WiFi with saved credenntials, trying user defined!\n"));
+	   JMRI_HELPER::logging(1,F("\nProblem connecting to WiFi with saved credentials, trying user defined!\n"));
      JMRI_HELPER::logging(1,F("Saved SSID: %s, saved Pass: %s\n\n"), jmri_data.data.ssid, jmri_data.data.pass );
 	   WiFi.begin(DEFAULTSSID, DEFAULTPASSWORD);
      JMRI_HELPER::logging(1,F("Waiting for Wifi to come up..."));
@@ -76,7 +76,8 @@ void WifiInterface::wifi_setup() {
         //failed. So request a new ssid and password
         if (WiFi.status() != WL_CONNECTED ) {
             JMRI_HELPER::logging(1,F("\nProblem connecting to wifi with existing credentials.\nAssuming a reset is required...\n"));
-            JMRI_HELPER::logging(1,F("SSID: %s Pass: %s\n\n"), jmri_data.data.ssid, jmri_data.data.pass );
+            JMRI_HELPER::logging(1,F("Saved SSID: %s Pass: %s\n\n"), jmri_data.data.ssid, jmri_data.data.pass );
+            JMRI_HELPER::logging(1,F("User defined (credentials.h) SSID: %s Pass: %s\n\n"), DEFAULTSSID, DEFAULTPASSWORD);
             scan();
             
         } 

@@ -31,7 +31,7 @@ Below is a simple MQTT block diagram. The MQTT broker acts as a middle man betwe
 Simple broker setup example.
 
     1. Enable MQTT within JMRI:
-       Under File->preferences->Connections add a new tab and select MQTT under “System manufacture” and “MQTT Connection” under System connections. Then set the IP address or hostname of the machine that is/will run the MQTT broker. In my case JMRI and mosquitto (Linux MQTT server) are running on the same machine.
+       Under File->preferences->Connections add a new tab and select MQTT under “System manufacturer” and “MQTT Connection” under System connections. Then set the IP address or hostname of the machine that is/will run the MQTT broker. In my case JMRI and mosquitto (Linux MQTT server) are running on the same machine.
        Leave the last two parameters as default.
 
     2. Set up a MQTT broker:
